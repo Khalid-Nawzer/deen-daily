@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each signed-in user can only read/write their own user record
+    // (used to remember which room/pair they belong to).
+    match /users/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // A "room" is one pair (you + your partner).
+    // Only the two people in the room (host or guest) can read/write it,
+    // OR a brand-new signed-in user who is about to join with a valid code
+    // (they need to read it once to check the code is real / not full).
+    match /rooms/{roomCode} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.resource.data.hostUid == request.auth.uid;
+      allow update: if request.auth != null &&
+                    (resource.data.hostUid == request.auth.uid ||
+                     resource.data.guestUid == request.auth.uid ||
+                     resource.data.guestUid == null);
+      allow delete: if false;
+
+      match /days/{dayId} {
+        allow read, write: if request.auth != null &&
+          (get(/databases/$(database)/documents/rooms/$(roomCode)).data.hostUid == request.auth.uid ||
+           get(/databases/$(database)/documents/rooms/$(roomCode)).data.guestUid == request.auth.uid);
+      }
+
+      match /notes/{uid} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}
