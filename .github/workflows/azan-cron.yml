@@ -1,0 +1,20 @@
+name: Azan Checker
+
+# Pings the deployed check-azan function every 5 minutes so it can fire
+# real push notifications at each prayer time — even when nobody has the
+# app open. This runs on GitHub's free tier and needs no secrets, since the
+# site URL below is public.
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch: {}   # lets you manually trigger a test run from the Actions tab
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call check-azan function
+        run: |
+          curl -sS -X GET "https://YOUR-SITE-NAME.netlify.app/.netlify/functions/check-azan" \
+            --max-time 25 || echo "Ping failed (will retry in 5 minutes)"
