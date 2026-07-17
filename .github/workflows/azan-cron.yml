@@ -16,5 +16,5 @@ jobs:
     steps:
       - name: Call check-azan function
         run: |
-          curl -sS -X GET "https://YOUR-SITE-NAME.netlify.app/.netlify/functions/check-azan" \
+          curl -sS -X GET "https://clever-bunny-6ef61e.netlify.app/.netlify/functions/check-azan" \
             --max-time 25 || echo "Ping failed (will retry in 5 minutes)"
