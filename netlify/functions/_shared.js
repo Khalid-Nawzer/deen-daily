@@ -25,11 +25,10 @@ if (!admin.apps.length) {
 }
 
 webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT || 'mailto:example@example.com',
-  process.env.VAPID_PUBLIC_KEY,
-  process.env.VAPID_PRIVATE_KEY
+  (process.env.VAPID_SUBJECT || 'mailto:example@example.com').trim(),
+  (process.env.VAPID_PUBLIC_KEY || '').trim(),
+  (process.env.VAPID_PRIVATE_KEY || '').trim()
 );
-
 const db = admin.firestore();
 
 async function sendPush(sub, payload) {
