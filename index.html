@@ -638,6 +638,14 @@
     <div class="ai-key-note">Stored only in this browser (localStorage) — never sent anywhere except directly to Anthropic's API. For a public production site, proxy this through a small backend/Cloudflare Worker instead of shipping the key in client code, so visitors can't see or misuse it.</div>
   </div>
 
+  <div class="setting-row" style="display:block;">
+    <div><div class="setting-lbl">🆓 Gemini AI key (free)</div><div class="setting-sub">Free alternative to the Claude key above — uses Google's free Gemini tier to answer anything, always picking from real authentic duas.</div></div>
+    <div class="ai-key-box">
+      <input type="password" id="geminiKeyInput" placeholder="AIza...">
+    </div>
+    <div class="ai-key-note">Get a free key at aistudio.google.com/apikey — no card required for normal personal use. Stored only in this browser.</div>
+  </div>
+
   <button class="sheet-save" onclick="saveSettings()">Save settings</button>
   <button class="gate-btn ghost" style="margin-top:10px;" onclick="signOutUser()">Sign out</button>
 </div>
@@ -769,6 +777,25 @@
   </div>
 </div>
 
+<div id="page-hadith" class="page">
+  <div class="section-title">Hadith Collections</div>
+  <div class="hadith-book-grid" id="hadithBookGrid"></div>
+  <div id="hadithReader" style="display:none;">
+    <button class="back-btn" onclick="closeHadithReader()">← All Books</button>
+    <div class="mushaf-nav" style="margin-top:0; margin-bottom:12px;">
+      <button class="mushaf-nav-btn" onclick="hadithPrev()">← Prev</button>
+      <div class="mushaf-page-jump">No. <input id="hadithNumInput" type="number" min="1" value="1" onchange="jumpToHadith(this.value)"></div>
+      <button class="mushaf-nav-btn" onclick="hadithNext()">Next →</button>
+    </div>
+    <div class="qtabs">
+      <button class="qtab active" id="htab-en" onclick="switchHadithLang('en')">🌍 English</button>
+      <button class="qtab" id="htab-ta" onclick="switchHadithLang('ta')">🇱🇰 Tamil</button>
+    </div>
+    <div class="ayah-block" id="hadithContent"><div class="loading-txt"><div class="spinner"></div>Loading…</div></div>
+    <button class="mushaf-play-btn" id="hadithPlayBtn" onclick="toggleHadithSpeech()" style="width:100%; border-radius:14px; margin-top:14px; font-size:13.5px; font-weight:700;">▶ Listen</button>
+  </div>
+</div>
+
 <div id="page-ai" class="page">
   <div class="ai-intro">
     <div class="ico">✨🤲</div>
@@ -821,6 +848,10 @@
     <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
     Quran
   </button>
+  <button class="nav-btn" id="nav-hadith" onclick="goPage('hadith')">
+    <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 7h6M9 11h6"/></svg></span>
+    Hadith
+  </button>
   <button class="nav-btn" id="nav-qibla" onclick="goPage('qibla')">
     <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
     Qibla
@@ -863,6 +894,7 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 // ---------- CONFIG: AI ----------
 const AI_MODEL = "claude-sonnet-5";
 let AI_KEY = localStorage.getItem('deen_ai_key') || '';
+let GEMINI_KEY = localStorage.getItem('deen_gemini_key') || '';
 
 const PRAYERS = [
   {id:'fajr', name:'Fajr', time:'—', apiKey:'Fajr', ico:'🌅'},
@@ -885,6 +917,7 @@ async function fetchPrayerTimes(){
     const t = json.data.timings;
     PRAYERS.forEach(p => { p.time = t[p.apiKey] || '—'; });
     localStorage.setItem('deen_times_cache', JSON.stringify({date: getSLDateKey(), times: t}));
+    scheduleNativeAzanNotifications();
   }catch(e){
     const cached = JSON.parse(localStorage.getItem('deen_times_cache') || 'null');
     if(cached && cached.date === getSLDateKey()){
@@ -1353,6 +1386,7 @@ function enableAzanSound(){
 
 function openSheet(){
   document.getElementById('aiKeyInput').value = AI_KEY;
+  document.getElementById('geminiKeyInput').value = GEMINI_KEY;
   document.getElementById('displayNameInput').value = ME || '';
   document.getElementById('roomCodeSub').textContent = ROOM_CODE ? `${ROOM_CODE} · share this so your partner can join too` : '—';
   updateToggles();
@@ -1366,6 +1400,8 @@ function closeSheet(){
 async function saveSettings(){
   AI_KEY = document.getElementById('aiKeyInput').value.trim();
   localStorage.setItem('deen_ai_key', AI_KEY);
+  GEMINI_KEY = document.getElementById('geminiKeyInput').value.trim();
+  localStorage.setItem('deen_gemini_key', GEMINI_KEY);
   const newName = document.getElementById('displayNameInput').value.trim();
   if(newName && newName !== ME){ await saveDisplayName(); }
   closeSheet();
@@ -1407,6 +1443,114 @@ function checkMissed(){
   box.innerHTML = `<div class="missed-box">🌙 <b>It's past 10:30 PM</b> — you still have: ${all.join(', ')}.</div>`;
 }
 
+// ---------------- Hadith ----------------
+const HADITH_BOOKS = [
+  {key:'bukhari', name:'Sahih al-Bukhari', tamil:true},
+  {key:'muslim', name:'Sahih Muslim', tamil:false},
+  {key:'abudawud', name:'Sunan Abu Dawud', tamil:false},
+  {key:'tirmidhi', name:'Jami at-Tirmidhi', tamil:false},
+  {key:'ibnmajah', name:'Sunan Ibn Majah', tamil:false},
+  {key:'nasai', name:"Sunan an-Nasa'i", tamil:false}
+];
+let currentHadithBook = null, currentHadithNum = 1, currentHadithLang = 'en', hadithListLoaded = false, lastHadithText = '';
+
+function loadHadithBookList(){
+  document.getElementById('hadithBookGrid').innerHTML = HADITH_BOOKS.map(b => `
+    <div class="surah-row" onclick="openHadithBook('${b.key}')">
+      <div class="surah-num">📗</div>
+      <div class="surah-info">
+        <div class="surah-name">${b.name}</div>
+        <div class="surah-sub">${b.tamil ? 'English & Tamil' : 'English'}</div>
+      </div>
+    </div>`).join('');
+  hadithListLoaded = true;
+}
+function openHadithBook(key){
+  currentHadithBook = key; currentHadithNum = 1; currentHadithLang = 'en';
+  document.getElementById('hadithBookGrid').style.display = 'none';
+  document.getElementById('hadithReader').style.display = 'block';
+  document.getElementById('hadithNumInput').value = 1;
+  updateHadithLangTabs();
+  fetchHadith();
+}
+function closeHadithReader(){
+  document.getElementById('hadithReader').style.display = 'none';
+  document.getElementById('hadithBookGrid').style.display = 'grid';
+  stopHadithSpeech();
+}
+function updateHadithLangTabs(){
+  const book = HADITH_BOOKS.find(b => b.key === currentHadithBook);
+  document.getElementById('htab-en').classList.toggle('active', currentHadithLang === 'en');
+  document.getElementById('htab-ta').classList.toggle('active', currentHadithLang === 'ta');
+  document.getElementById('htab-ta').style.opacity = (book && book.tamil) ? '1' : '.4';
+}
+function switchHadithLang(lang){
+  const book = HADITH_BOOKS.find(b => b.key === currentHadithBook);
+  if(lang === 'ta' && !(book && book.tamil)){
+    document.getElementById('hadithContent').innerHTML = `<div class="ayah-english">Tamil translation isn't available yet for this book.</div>`;
+    return;
+  }
+  currentHadithLang = lang;
+  updateHadithLangTabs();
+  fetchHadith();
+}
+async function fetchHadith(){
+  stopHadithSpeech();
+  const content = document.getElementById('hadithContent');
+  content.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Loading…</div>`;
+  const prefix = currentHadithLang === 'ta' ? 'tam' : 'eng';
+  const edition = `${prefix}-${currentHadithBook}`;
+  const url = `https://cdn.jsdelivr.net/gh/fawazahmed0/hadith-api@1/editions/${edition}/${currentHadithNum}.min.json`;
+  try{
+    const res = await fetch(url);
+    if(!res.ok) throw new Error('not found');
+    const json = await res.json();
+    const h = json.hadiths && json.hadiths[0];
+    if(!h) throw new Error('empty');
+    lastHadithText = h.text || '';
+    const ref = h.reference ? `Book ${h.reference.book ?? '—'} · No. ${h.reference.hadith ?? currentHadithNum}` : `No. ${currentHadithNum}`;
+    content.innerHTML = `<div class="ayah-num">${ref}</div><div class="ayah-english">${lastHadithText}</div>`;
+  }catch(e){
+    content.innerHTML = `<div class="ayah-english">Couldn't load hadith #${currentHadithNum} for this book/language. Try a nearby number, or switch language.</div>`;
+    lastHadithText = '';
+  }
+}
+function jumpToHadith(val){
+  const n = parseInt(val);
+  if(!n || n < 1) return;
+  currentHadithNum = n;
+  fetchHadith();
+}
+function hadithPrev(){
+  if(currentHadithNum <= 1) return;
+  currentHadithNum--;
+  document.getElementById('hadithNumInput').value = currentHadithNum;
+  fetchHadith();
+}
+function hadithNext(){
+  currentHadithNum++;
+  document.getElementById('hadithNumInput').value = currentHadithNum;
+  fetchHadith();
+}
+let hadithUtterance = null;
+function toggleHadithSpeech(){
+  const btn = document.getElementById('hadithPlayBtn');
+  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
+  if(speechSynthesis.speaking){ stopHadithSpeech(); return; }
+  if(!lastHadithText) return;
+  hadithUtterance = new SpeechSynthesisUtterance(lastHadithText);
+  hadithUtterance.lang = currentHadithLang === 'ta' ? 'ta-IN' : 'en-US';
+  hadithUtterance.onend = () => { btn.textContent = '▶ Listen'; };
+  hadithUtterance.onerror = () => { btn.textContent = '▶ Listen'; };
+  speechSynthesis.speak(hadithUtterance);
+  btn.textContent = '⏸ Stop';
+}
+function stopHadithSpeech(){
+  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  const btn = document.getElementById('hadithPlayBtn');
+  if(btn) btn.textContent = '▶ Listen';
+}
+
 // ---------------- navigation ----------------
 function goPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
@@ -1418,6 +1562,7 @@ function goPage(name){
   if(name === 'quran' && !quranListLoaded){ loadSurahList(); }
   if(name === 'notes'){ loadNotes(); }
   if(name === 'ai' && !aiChipsRendered){ renderChips(); }
+  if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
 }
 
 // ---------------- Adhkar & Duas library ----------------
@@ -1918,6 +2063,26 @@ function stopAzan(){
   a.pause(); a.currentTime = 0;
   document.getElementById('azanBanner').style.display = 'none';
 }
+async function scheduleNativeAzanNotifications(){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  const { LocalNotifications } = Capacitor.Plugins;
+  try{
+    const perm = await LocalNotifications.requestPermissions();
+    if(perm.display !== 'granted') return;
+    await LocalNotifications.createChannel({
+      id: 'azan-channel', name: 'Azan', importance: 5, sound: 'azan.mp3', visibility: 1
+    });
+    const notifications = PRAYERS.map((p, i) => {
+      const [hh, mm] = (p.time || '00:00').split(':').map(Number);
+      const now = new Date();
+      const fireAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
+      if(fireAt < now) fireAt.setDate(fireAt.getDate() + 1);
+      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name}`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel' };
+    });
+    await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
+    await LocalNotifications.schedule({ notifications });
+  }catch(e){ console.error('native azan schedule failed', e); }
+}
 
 // ================= DUA AI =================
 const DUA_LIBRARY = [
@@ -2005,7 +2170,47 @@ const DUA_LIBRARY = [
     ar:'بِسْمِ اللَّهِ',
     tr:'Bismillah',
     en:'In the name of Allah.',
-    src:'Sunan Abu Dawood' }
+    src:'Sunan Abu Dawood' },
+  { cat:'Sickness', kw:['sick','sickness','illness','ill','pain','hurting','unwell','fever','disease'],
+    ar:'أَذْهِبِ الْبَأْسَ رَبَّ النَّاسِ، اشْفِ أَنْتَ الشَّافِي، لَا شِفَاءَ إِلَّا شِفَاؤُكَ، شِفَاءً لَا يُغَادِرُ سَقَمًا',
+    tr:'Adh-hibil-ba\'sa rabban-naas, ishfi antash-shaafi laa shifaa\'a illaa shifaa\'uka, shifaa\'an laa yughaadiru saqamaa',
+    en:'Remove the harm, O Lord of mankind, and heal, for You are the Healer. There is no cure except Your cure, a cure that leaves no illness behind.',
+    src:'Sahih al-Bukhari & Sahih Muslim' },
+  { cat:'Exams & Studying', kw:['exam','test','study','studying','memorize','memorise','revision'],
+    ar:'رَبِّ زِدْنِي عِلْمًا',
+    tr:'Rabbi zidnee \'ilma',
+    en:'My Lord, increase me in knowledge.',
+    src:'Quran 20:114' },
+  { cat:'Travel', kw:['travel','trip','journey','flight','flying','driving far'],
+    ar:'سُبْحَانَ الَّذِي سَخَّرَ لَنَا هَذَا وَمَا كُنَّا لَهُ مُقْرِنِينَ وَإِنَّا إِلَى رَبِّنَا لَمُنقَلِبُونَ',
+    tr:'Subhaanal-lathee sakhkhara lanaa haathaa wa maa kunnaa lahu muqrineen, wa innaa ilaa rabbinaa lamunqaliboon',
+    en:'Glory to Him who has subjected this to us, and we could never have it (by our efforts). And indeed, to our Lord we will return.',
+    src:'Quran 43:13-14' },
+  { cat:'Debt & Money Worry', kw:['debt', 'money', 'financial', 'broke', 'poverty', 'poor', 'loan', 'bills'],
+    ar:'اللَّهُمَّ اكْفِنِي بِحَلَالِكَ عَنْ حَرَامِكَ وَأَغْنِنِي بِفَضْلِكَ عَمَّنْ سِوَاكَ',
+    tr:'Allahummak-finee bihalaalika \'an haraamika wa aghninee bifadlika \'amman siwaak',
+    en:'O Allah, suffice me with what You have made lawful instead of what You have made unlawful, and make me independent of all others besides You.',
+    src:'Jami at-Tirmidhi' },
+  { cat:'Anxiety & Worry', kw:['anxiety','anxious','worried','worry','overthinking','stress','stressed','nervous'],
+    ar:'اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْهَمِّ وَالْحَزَنِ، وَالْعَجْزِ وَالْكَسَلِ',
+    tr:'Allahumma innee a\'oothu bika minal-hammi wal-hazani, wal-\'ajzi wal-kasal',
+    en:'O Allah, I seek refuge in You from anxiety and sorrow, from helplessness and laziness.',
+    src:'Sahih al-Bukhari' },
+  { cat:'Sleep Trouble', kw:['insomnia','can\'t sleep','cant sleep','sleepless','sleep trouble','nightmare'],
+    ar:'بِاسْمِكَ رَبِّي وَضَعْتُ جَنْبِي، وَبِكَ أَرْفَعُهُ',
+    tr:'Bismika rabbee wada\'tu janbee, wa bika arfa\'uh',
+    en:'In Your name my Lord, I lie down, and in Your name I rise.',
+    src:'Sahih al-Bukhari' },
+  { cat:'Repentance', kw:['sin','sinned','repent','repentance','guilty','forgive me','astaghfirullah','tawbah'],
+    ar:'رَبِّ اغْفِرْ لِي وَتُبْ عَلَيَّ إِنَّكَ أَنْتَ التَّوَّابُ الرَّحِيمُ',
+    tr:'Rabbi ighfir lee wa tub \'alayya innaka antat-tawwaabur-raheem',
+    en:'My Lord, forgive me and accept my repentance, for You are the Accepter of repentance, the Merciful.',
+    src:'Sunan Abu Dawood' },
+  { cat:'Leaving Home', kw:['leaving home','leaving house','going out','stepping out'],
+    ar:'بِسْمِ اللَّهِ تَوَكَّلْتُ عَلَى اللَّهِ وَلَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللَّهِ',
+    tr:'Bismillahi tawakkaltu \'alallahi wa laa hawla wa laa quwwata illaa billaah',
+    en:'In the name of Allah, I place my trust in Allah, and there is no might nor power except with Allah.',
+    src:'Sunan Abu Dawood & Tirmidhi' }
 ];
 
 let aiChipsRendered = false;
@@ -2084,20 +2289,54 @@ async function sendChat(){
     return;
   }
 
-  // no local match — fall back to Claude if a key is configured
-  if(!AI_KEY){
-    addBotMessage(`I don't have that one memorized yet 🤲 Try a chip above, or add your Claude API key in Settings (⚙️) to unlock free-form answers for anything.`, {plain:true});
+  // no local match — fall back to Claude, then free Gemini, then give up gracefully
+  if(!AI_KEY && !GEMINI_KEY){
+    addBotMessage(`I don't have that one memorized yet 🤲 Try a chip above, or add a free Gemini key (or Claude key) in Settings (⚙️) to unlock answers for anything.`, {plain:true});
     return;
   }
   addTyping();
   try{
-    const reply = await askClaude(text);
+    const reply = AI_KEY ? await askClaude(text) : await askGemini(text);
     removeTyping();
-    addBotMessage(`${reply}<div class="dua-note">✨ AI-generated guidance — for religious rulings, please verify with a qualified scholar.</div>`);
+    addBotMessage(`${reply}<div class="dua-note">✨ AI-assisted match — for religious rulings, please verify with a qualified scholar.</div>`);
   }catch(e){
     removeTyping();
-    addBotMessage(`Couldn't reach Claude right now (${e.message || 'network error'}). Check your API key in Settings, or try one of the quick topics above.`, {plain:true});
+    addBotMessage(`Couldn't reach the AI right now (${e.message || 'network error'}). Check your API key in Settings, or try one of the quick topics above.`, {plain:true});
   }
+}
+
+async function askGemini(userText){
+  // Build a compact reference list of our real, authentic duas so Gemini only
+  // ever SELECTS from verified text instead of inventing Arabic/attributions.
+  const refList = DUA_LIBRARY.map((d,i) => `${i}. [${d.cat}] ${d.en} (Source: ${d.src})`).join('\n');
+  const prompt = `You are a dua-matching assistant inside the "Deen Daily" app. A user described this situation: "${userText}"
+
+Here is our verified library of authentic duas (Quran/hadith sourced):
+${refList}
+
+Pick the single closest-matching dua by its number. Reply with ONLY this exact JSON, no markdown, no code fences, no extra text:
+{"index": <number or -1 if truly nothing fits>, "note": "<one warm sentence on why this dua fits, or if index is -1, a brief compassionate general Islamic reflection on their situation with no invented Arabic text>"}`;
+
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error('Gemini ' + res.status + (errText ? ': '+errText.slice(0,120) : ''));
+  }
+  const data = await res.json();
+  let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+  raw = raw.replace(/^```json\s*|```$/g, '').trim();
+  let parsed;
+  try{ parsed = JSON.parse(raw); }catch(e){ throw new Error('unexpected AI response'); }
+
+  if(parsed.index >= 0 && DUA_LIBRARY[parsed.index]){
+    const d = DUA_LIBRARY[parsed.index];
+    return renderDuaCard(d) + (parsed.note ? `<div class="dua-en" style="margin-top:8px; opacity:.85;">${parsed.note}</div>` : '');
+  }
+  return `<div class="dua-en">${parsed.note || "I couldn't find a close match in our dua library for that — please consult a knowledgeable source for your specific situation."}</div>`;
 }
 
 async function askClaude(userText){
