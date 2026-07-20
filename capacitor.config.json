@@ -1,0 +1,13 @@
+{
+  "appId": "com.khalidnawzer.deendaily",
+  "appName": "Deen Daily",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "plugins": {
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#D4AF37",
+      "sound": "azan.mp3"
+    }
+  }
+}
