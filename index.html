@@ -615,6 +615,17 @@
   </div>
 </div>
 
+<div class="sheet-backdrop" id="notesSheetBackdrop" onclick="closeNotesSheet()"></div>
+<div class="sheet" id="notesSheet">
+  <div class="sheet-handle"></div>
+  <h2>📝 My Notes</h2>
+  <textarea id="notesArea" placeholder="Things to remember for next time..."></textarea>
+  <div style="margin-top:10px;">
+    <button class="save-btn" onclick="saveNotes()">Save</button>
+    <span class="save-status" id="notesStatus"></span>
+  </div>
+</div>
+
 <div class="sheet-backdrop" id="sheetBackdrop" onclick="closeSheet()"></div>
 <div class="sheet" id="settingsSheet">
   <div class="sheet-handle"></div>
@@ -665,10 +676,16 @@
 
 <div class="topbar" style="display:none;">
   <div class="brand"><span class="crescent">🌙</span><h1>Deen Daily</h1></div>
-  <button class="icon-btn" onclick="openSheet()" aria-label="Settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
+  <div style="display:flex; gap:8px;">
+    <button class="icon-btn" onclick="openNotesSheet()" aria-label="Notes">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </button>
+    <button class="icon-btn" onclick="openSheet()" aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
 </div>
+
 
 <main style="display:none;">
 
@@ -835,13 +852,14 @@
   <footer>Point the top of your phone forward and rotate until the Kaaba icon lines up straight up</footer>
 </div>
 
-<div id="page-notes" class="page">
-  <div class="section-title">My Notes</div>
-  <textarea id="notesArea" placeholder="Things to remember for next time..."></textarea>
-  <div>
-    <button class="save-btn" onclick="saveNotes()">Save</button>
-    <span class="save-status" id="notesStatus"></span>
+<div id="page-asma" class="page">
+  <div class="section-title">99 Names of Allah</div>
+  <div class="qtabs">
+    <button class="qtab active" id="atab-arabic" onclick="switchAsmaMode('arabic')">🕌 Arabic</button>
+    <button class="qtab" id="atab-english" onclick="switchAsmaMode('english')">🌍 + English</button>
+    <button class="qtab" id="atab-tamil" onclick="switchAsmaMode('tamil')">🇱🇰 + Tamil</button>
   </div>
+  <div id="asmaGrid"></div>
 </div>
 
 </main>
@@ -871,9 +889,9 @@
     <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-4.9 1.9L12 17l-1.9-5.3L5 9.8l5-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg></span>
     Dua AI
   </button>
-  <button class="nav-btn" id="nav-notes" onclick="goPage('notes')">
-    <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></span>
-    Notes
+  <button class="nav-btn" id="nav-asma" onclick="goPage('asma')">
+    <span class="nav-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg></span>
+    99 Names
   </button>
 </nav>
 
@@ -1458,6 +1476,15 @@ function closeSheet(){
   document.getElementById('settingsSheet').classList.remove('open');
   document.getElementById('sheetBackdrop').classList.remove('open');
 }
+function openNotesSheet(){
+  loadNotes();
+  document.getElementById('notesSheet').classList.add('open');
+  document.getElementById('notesSheetBackdrop').classList.add('open');
+}
+function closeNotesSheet(){
+  document.getElementById('notesSheet').classList.remove('open');
+  document.getElementById('notesSheetBackdrop').classList.remove('open');
+}
 async function saveSettings(){
   AI_KEY = document.getElementById('aiKeyInput').value.trim();
   localStorage.setItem('deen_ai_key', AI_KEY);
@@ -1621,7 +1648,7 @@ function goPage(name){
   window.scrollTo(0,0);
   if(name === 'adhkar' && !adhkarRendered){ renderAdhkar(); }
   if(name === 'quran' && !quranListLoaded){ loadSurahList(); }
-  if(name === 'notes'){ loadNotes(); }
+  if(name === 'asma' && !asmaRendered){ renderAsma(); }
   if(name === 'ai' && !aiChipsRendered){ renderChips(); }
   if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
 }
@@ -1766,6 +1793,241 @@ function toggleCat(i){
   const isOpen = el.classList.contains('open');
   if(isOpen){ body.style.maxHeight = null; el.classList.remove('open'); }
   else { el.classList.add('open'); body.style.maxHeight = body.scrollHeight + 'px'; }
+}
+
+// ---------------- 99 Names of Allah (Asma-ul-Husna) ----------------
+const ASMA_UL_HUSNA = [
+  {ar:'الرَّحْمَٰن', tr:'Ar-Rahman', en:'The Most Compassionate'},
+  {ar:'الرَّحِيم', tr:'Ar-Raheem', en:'The Most Merciful'},
+  {ar:'الْمَلِك', tr:'Al-Malik', en:'The King, The Sovereign'},
+  {ar:'الْقُدُّوس', tr:'Al-Quddus', en:'The Most Sacred, The Pure'},
+  {ar:'السَّلَام', tr:'As-Salam', en:'The Source of Peace'},
+  {ar:'الْمُؤْمِن', tr:'Al-Mu\'min', en:'The Giver of Faith and Security'},
+  {ar:'الْمُهَيْمِن', tr:'Al-Muhaymin', en:'The Guardian, The Protector'},
+  {ar:'الْعَزِيز', tr:'Al-Aziz', en:'The Almighty, The Honorable'},
+  {ar:'الْجَبَّار', tr:'Al-Jabbar', en:'The Compeller, The Restorer'},
+  {ar:'الْمُتَكَبِّر', tr:'Al-Mutakabbir', en:'The Supreme, The Majestic'},
+  {ar:'الْخَالِق', tr:'Al-Khaliq', en:'The Creator'},
+  {ar:'الْبَارِئ', tr:'Al-Bari\'', en:'The Evolver, The Maker'},
+  {ar:'الْمُصَوِّر', tr:'Al-Musawwir', en:'The Fashioner, The Shaper'},
+  {ar:'الْغَفَّار', tr:'Al-Ghaffar', en:'The Great Forgiver'},
+  {ar:'الْقَهَّار', tr:'Al-Qahhar', en:'The Subduer, The Ever-Dominant'},
+  {ar:'الْوَهَّاب', tr:'Al-Wahhab', en:'The Bestower'},
+  {ar:'الرَّزَّاق', tr:'Ar-Razzaq', en:'The Provider'},
+  {ar:'الْفَتَّاح', tr:'Al-Fattah', en:'The Opener, The Judge'},
+  {ar:'الْعَلِيم', tr:'Al-\'Alim', en:'The All-Knowing'},
+  {ar:'الْقَابِض', tr:'Al-Qabid', en:'The Withholder, The Constrictor'},
+  {ar:'الْبَاسِط', tr:'Al-Basit', en:'The Extender, The Expander'},
+  {ar:'الْخَافِض', tr:'Al-Khafid', en:'The Reducer, The Abaser'},
+  {ar:'الرَّافِع', tr:'Ar-Rafi\'', en:'The Exalter, The Elevator'},
+  {ar:'الْمُعِزّ', tr:'Al-Mu\'izz', en:'The Bestower of Honor'},
+  {ar:'الْمُذِلّ', tr:'Al-Mudhill', en:'The Humiliator, The Abaser'},
+  {ar:'السَّمِيع', tr:'As-Sami\'', en:'The All-Hearing'},
+  {ar:'الْبَصِير', tr:'Al-Basir', en:'The All-Seeing'},
+  {ar:'الْحَكَم', tr:'Al-Hakam', en:'The Judge, The Arbitrator'},
+  {ar:'الْعَدْل', tr:'Al-\'Adl', en:'The Utterly Just'},
+  {ar:'اللَّطِيف', tr:'Al-Latif', en:'The Subtle One, The Gentle'},
+  {ar:'الْخَبِير', tr:'Al-Khabir', en:'The All-Aware'},
+  {ar:'الْحَلِيم', tr:'Al-Halim', en:'The Forbearing, The Patient'},
+  {ar:'الْعَظِيم', tr:'Al-\'Azim', en:'The Magnificent, The Supreme'},
+  {ar:'الْغَفُور', tr:'Al-Ghafur', en:'The Forgiving'},
+  {ar:'الشَّكُور', tr:'Ash-Shakur', en:'The Grateful, The Appreciative'},
+  {ar:'الْعَلِيّ', tr:'Al-\'Ali', en:'The Most High'},
+  {ar:'الْكَبِير', tr:'Al-Kabir', en:'The Most Great'},
+  {ar:'الْحَفِيظ', tr:'Al-Hafiz', en:'The Preserver, The Guardian'},
+  {ar:'الْمُقِيت', tr:'Al-Muqit', en:'The Sustainer, The Nourisher'},
+  {ar:'الْحَسِيب', tr:'Al-Hasib', en:'The Reckoner, The Accounter'},
+  {ar:'الْجَلِيل', tr:'Al-Jalil', en:'The Majestic'},
+  {ar:'الْكَرِيم', tr:'Al-Karim', en:'The Most Generous'},
+  {ar:'الرَّقِيب', tr:'Ar-Raqib', en:'The Watchful'},
+  {ar:'الْمُجِيب', tr:'Al-Mujib', en:'The Responsive, The Answerer'},
+  {ar:'الْوَاسِع', tr:'Al-Wasi\'', en:'The All-Encompassing, The Vast'},
+  {ar:'الْحَكِيم', tr:'Al-Hakim', en:'The All-Wise'},
+  {ar:'الْوَدُود', tr:'Al-Wadud', en:'The Most Loving'},
+  {ar:'الْمَجِيد', tr:'Al-Majid', en:'The Glorious, The Most Honorable'},
+  {ar:'الْبَاعِث', tr:'Al-Ba\'ith', en:'The Resurrector'},
+  {ar:'الشَّهِيد', tr:'Ash-Shahid', en:'The Witness'},
+  {ar:'الْحَقّ', tr:'Al-Haqq', en:'The Truth, The Real'},
+  {ar:'الْوَكِيل', tr:'Al-Wakil', en:'The Trustee, The Disposer of Affairs'},
+  {ar:'الْقَوِيّ', tr:'Al-Qawiyy', en:'The Most Strong'},
+  {ar:'الْمَتِين', tr:'Al-Matin', en:'The Firm One, The Steadfast'},
+  {ar:'الْوَلِيّ', tr:'Al-Waliyy', en:'The Protecting Friend'},
+  {ar:'الْحَمِيد', tr:'Al-Hamid', en:'The Praiseworthy'},
+  {ar:'الْمُحْصِي', tr:'Al-Muhsi', en:'The Accounter, The Reckoner'},
+  {ar:'الْمُبْدِئ', tr:'Al-Mubdi\'', en:'The Originator, The Beginner'},
+  {ar:'الْمُعِيد', tr:'Al-Mu\'id', en:'The Restorer, The Reinstater'},
+  {ar:'الْمُحْيِي', tr:'Al-Muhyi', en:'The Giver of Life'},
+  {ar:'الْمُمِيت', tr:'Al-Mumit', en:'The Bringer of Death'},
+  {ar:'الْحَيّ', tr:'Al-Hayy', en:'The Ever-Living'},
+  {ar:'الْقَيُّوم', tr:'Al-Qayyum', en:'The Self-Subsisting, The Sustainer'},
+  {ar:'الْوَاجِد', tr:'Al-Wajid', en:'The Finder, The Perceiver'},
+  {ar:'الْمَاجِد', tr:'Al-Majid', en:'The Noble, The Glorious'},
+  {ar:'الْوَاحِد', tr:'Al-Wahid', en:'The One'},
+  {ar:'الْأَحَد', tr:'Al-Ahad', en:'The Unique, The Only One'},
+  {ar:'الصَّمَد', tr:'As-Samad', en:'The Eternal Refuge, The Self-Sufficient'},
+  {ar:'الْقَادِر', tr:'Al-Qadir', en:'The All-Powerful, The Able'},
+  {ar:'الْمُقْتَدِر', tr:'Al-Muqtadir', en:'The Powerful, The One with Full Ability'},
+  {ar:'الْمُقَدِّم', tr:'Al-Muqaddim', en:'The Expediter, The Promoter'},
+  {ar:'الْمُؤَخِّر', tr:'Al-Mu\'akhkhir', en:'The Delayer'},
+  {ar:'الْأَوَّل', tr:'Al-Awwal', en:'The First'},
+  {ar:'الْآخِر', tr:'Al-Akhir', en:'The Last'},
+  {ar:'الظَّاهِر', tr:'Az-Zahir', en:'The Manifest, The Evident'},
+  {ar:'الْبَاطِن', tr:'Al-Batin', en:'The Hidden, The Unmanifest'},
+  {ar:'الْوَالِي', tr:'Al-Wali', en:'The Governor, The Sole Ruler'},
+  {ar:'الْمُتَعَالِي', tr:'Al-Muta\'ali', en:'The Self-Exalted'},
+  {ar:'الْبَرّ', tr:'Al-Barr', en:'The Doer of Good, The Source of All Goodness'},
+  {ar:'التَّوَّاب', tr:'At-Tawwab', en:'The Ever-Accepting of Repentance'},
+  {ar:'الْمُنْتَقِم', tr:'Al-Muntaqim', en:'The Avenger'},
+  {ar:'الْعَفُوّ', tr:'Al-\'Afuww', en:'The Pardoner'},
+  {ar:'الرَّءُوف', tr:'Ar-Ra\'uf', en:'The Compassionate, The All-Pitying'},
+  {ar:'مَالِكُ الْمُلْك', tr:'Malik-ul-Mulk', en:'Owner of All Sovereignty'},
+  {ar:'ذُو الْجَلَالِ وَالْإِكْرَام', tr:'Dhul-Jalali wal-Ikram', en:'Lord of Majesty and Generosity'},
+  {ar:'الْمُقْسِط', tr:'Al-Muqsit', en:'The Equitable, The Requiter'},
+  {ar:'الْجَامِع', tr:'Al-Jami\'', en:'The Gatherer, The Uniter'},
+  {ar:'الْغَنِيّ', tr:'Al-Ghani', en:'The Self-Sufficient, The Rich'},
+  {ar:'الْمُغْنِي', tr:'Al-Mughni', en:'The Enricher'},
+  {ar:'الْمَانِع', tr:'Al-Mani\'', en:'The Preventer, The Withholder'},
+  {ar:'الضَّار', tr:'Ad-Darr', en:'The One Who Ordains Harm (in Divine Wisdom)'},
+  {ar:'النَّافِع', tr:'An-Nafi\'', en:'The Propitious, The Benefactor'},
+  {ar:'النُّور', tr:'An-Nur', en:'The Light'},
+  {ar:'الْهَادِي', tr:'Al-Hadi', en:'The Guide'},
+  {ar:'الْبَدِيع', tr:'Al-Badi\'', en:'The Incomparable Originator'},
+  {ar:'الْبَاقِي', tr:'Al-Baqi', en:'The Everlasting, The Everlasting Remainder'},
+  {ar:'الْوَارِث', tr:'Al-Warith', en:'The Inheritor, The Ultimate Heir'},
+  {ar:'الرَّشِيد', tr:'Ar-Rashid', en:'The Guide to the Right Path'},
+  {ar:'الصَّبُور', tr:'As-Sabur', en:'The Patient, The Timeless'}
+];
+let asmaRendered = false;
+let asmaUtterance = null;
+let asmaMode = 'arabic';
+let asmaTamil = JSON.parse(localStorage.getItem('deen_asma_tamil') || 'null'); // array of 99 strings, or null if not yet translated
+
+function switchAsmaMode(mode){
+  asmaMode = mode;
+  document.getElementById('atab-arabic').classList.toggle('active', mode==='arabic');
+  document.getElementById('atab-english').classList.toggle('active', mode==='english');
+  document.getElementById('atab-tamil').classList.toggle('active', mode==='tamil');
+  if(speechSynthesis.speaking) speechSynthesis.cancel();
+  if(mode === 'tamil' && !asmaTamil){
+    fetchAsmaTamil();
+    return;
+  }
+  renderAsmaList();
+}
+
+function renderAsma(){
+  asmaRendered = true;
+  renderAsmaList();
+}
+
+function renderAsmaList(){
+  const el = document.getElementById('asmaGrid');
+
+  if(asmaMode === 'arabic'){
+    el.innerHTML = `
+      <div class="dhikr-meaning" style="margin-bottom:16px;">The most beautiful names of Allah, in clear large Arabic script. Tap ▶ to hear it recited.</div>
+      ${ASMA_UL_HUSNA.map((n,i) => `
+        <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:16px 0;">
+          <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
+          <div class="dhikr-arabic" style="flex:1; text-align:right; font-size:32px; margin:0;">${n.ar}</div>
+          <button class="mushaf-play-btn" style="flex-shrink:0;" onclick="playAsmaName(${i}, this)">▶</button>
+        </div>
+      `).join('')}
+    `;
+    return;
+  }
+
+  if(asmaMode === 'english'){
+    el.innerHTML = `
+      <div class="dhikr-meaning" style="margin-bottom:16px;">Arabic with English transliteration and meaning. Tap ▶ to hear the name and meaning read aloud.</div>
+      ${ASMA_UL_HUSNA.map((n,i) => `
+        <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
+          <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
+          <div style="flex:1;">
+            <div class="dhikr-arabic" style="text-align:right; margin-bottom:4px;">${n.ar}</div>
+            <div class="dhikr-translit">${n.tr}</div>
+            <div class="dhikr-meaning">${n.en}</div>
+          </div>
+          <button class="mushaf-play-btn" style="flex-shrink:0;" onclick="playAsmaName(${i}, this)">▶</button>
+        </div>
+      `).join('')}
+    `;
+    return;
+  }
+
+  // tamil mode
+  el.innerHTML = `
+    <div class="dhikr-meaning" style="margin-bottom:16px;">Arabic with Tamil meaning. <span style="color:var(--gold-soft);">✨ AI-assisted translation — please verify with a Tamil-speaking scholar for precise wording.</span></div>
+    ${ASMA_UL_HUSNA.map((n,i) => `
+      <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
+        <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
+        <div style="flex:1;">
+          <div class="dhikr-arabic" style="text-align:right; margin-bottom:4px;">${n.ar}</div>
+          <div class="dhikr-translit">${n.tr}</div>
+          <div class="dhikr-meaning">${(asmaTamil && asmaTamil[i]) || n.en}</div>
+        </div>
+        <button class="mushaf-play-btn" style="flex-shrink:0;" onclick="playAsmaName(${i}, this)">▶</button>
+      </div>
+    `).join('')}
+  `;
+}
+
+async function fetchAsmaTamil(){
+  const el = document.getElementById('asmaGrid');
+  if(!GEMINI_KEY){
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Add a free Gemini API key in Settings (⚙️) to unlock Tamil translations — see the Dua AI section note for how to get one free. Once added, come back here.</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Translating into Tamil (one-time, then saved)…</div>`;
+  try{
+    const namesList = ASMA_UL_HUSNA.map((n,i) => `${i+1}. ${n.tr} — ${n.en}`).join('\n');
+    const prompt = `Translate the meaning (not the Arabic name itself) of each of these 99 names of Allah into clear, natural Tamil. Reply with ONLY a JSON array of exactly 99 Tamil strings, in the same order, no markdown, no extra text:\n${namesList}`;
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if(!res.ok) throw new Error('Gemini ' + res.status);
+    const data = await res.json();
+    let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+    raw = raw.replace(/^```json\s*|```$/g, '').trim();
+    const arr = JSON.parse(raw);
+    if(!Array.isArray(arr) || arr.length !== 99) throw new Error('unexpected response shape');
+    asmaTamil = arr;
+    localStorage.setItem('deen_asma_tamil', JSON.stringify(arr));
+    renderAsmaList();
+  }catch(e){
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch Tamil translations right now (${e.message || 'error'}). Check your Gemini key in Settings and try this tab again.</div>`;
+  }
+}
+
+function playAsmaName(i, btn){
+  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
+  if(speechSynthesis.speaking){
+    speechSynthesis.cancel();
+    document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+    return;
+  }
+  const n = ASMA_UL_HUSNA[i];
+  let text, lang;
+  if(asmaMode === 'arabic'){
+    text = n.ar;
+    lang = 'ar-SA';
+  } else if(asmaMode === 'tamil'){
+    text = (asmaTamil && asmaTamil[i]) ? `${n.tr}. ${asmaTamil[i]}` : `${n.tr}. ${n.en}`;
+    lang = 'ta-IN';
+  } else {
+    text = `${n.tr}. ${n.en}.`;
+    lang = 'en-US';
+  }
+  asmaUtterance = new SpeechSynthesisUtterance(text);
+  asmaUtterance.lang = lang;
+  asmaUtterance.rate = 0.9;
+  asmaUtterance.onend = () => { btn.textContent = '▶'; };
+  asmaUtterance.onerror = () => { btn.textContent = '▶'; };
+  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+  speechSynthesis.speak(asmaUtterance);
+  btn.textContent = '⏸';
 }
 
 // ---------------- Quran (Arabic) & Translation (English) ----------------
