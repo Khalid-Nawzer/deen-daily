@@ -17,6 +17,8 @@ jobs:
           mkdir -p www
           cp index.html manifest.json icon-192.png icon-512.png azan.mp3 sw.js www/
       - run: npx cap add android
+      - name: Remove default adaptive icon (so our custom PNG icon isn't overridden)
+        run: rm -rf android/app/src/main/res/mipmap-anydpi-v26
       - name: Apply custom app icon
         run: |
           cp mipmap-mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
