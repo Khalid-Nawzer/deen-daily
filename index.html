@@ -555,6 +555,17 @@
       Continue with Google
     </button>
     <div class="gate-note" style="margin-top:14px;">By continuing you agree this app stores your first name and prayer progress so it can sync between you and your partner.</div>
+
+    <div class="gate-divider">or</div>
+
+    <div class="field-lbl">Email</div>
+    <input class="gate-input" id="emailAuthEmail" type="email" placeholder="you@example.com" style="text-align:left; letter-spacing:normal;">
+    <div class="field-lbl">Password</div>
+    <input class="gate-input" id="emailAuthPassword" type="password" placeholder="At least 6 characters" style="text-align:left; letter-spacing:normal;">
+    <div class="gate-error" id="emailAuthErr"></div>
+    <button class="gate-btn primary" onclick="emailSignIn()">Sign in</button>
+    <button class="gate-btn ghost" onclick="emailSignUp()">Create new account</button>
+    <div class="gate-note" style="cursor:pointer; text-decoration:underline; margin-top:4px;" onclick="emailForgotPassword()">Forgot password?</div>
   </div>
 </div>
 
@@ -988,6 +999,41 @@ function signInWithGoogle(){
     if(err.code === 'auth/popup-blocked' || err.code === 'auth/cancelled-popup-request' || err.code === 'auth/operation-not-supported-in-this-environment'){
       auth.signInWithRedirect(googleProvider);
     }
+  });
+}
+
+function emailAuthError(msg){
+  const el = document.getElementById('emailAuthErr');
+  if(el) el.textContent = msg || '';
+}
+function emailSignIn(){
+  const email = document.getElementById('emailAuthEmail').value.trim();
+  const pass = document.getElementById('emailAuthPassword').value;
+  emailAuthError('');
+  if(!email || !pass){ emailAuthError('Please enter your email and password.'); return; }
+  auth.signInWithEmailAndPassword(email, pass).catch(err => {
+    emailAuthError(err.code === 'auth/invalid-credential' ? 'Incorrect email or password.' : (err.message || 'Sign in failed.'));
+  });
+}
+function emailSignUp(){
+  const email = document.getElementById('emailAuthEmail').value.trim();
+  const pass = document.getElementById('emailAuthPassword').value;
+  emailAuthError('');
+  if(!email || !pass){ emailAuthError('Please enter your email and password.'); return; }
+  if(pass.length < 6){ emailAuthError('Password must be at least 6 characters.'); return; }
+  auth.createUserWithEmailAndPassword(email, pass).catch(err => {
+    emailAuthError(err.code === 'auth/email-already-in-use' ? 'That email is already registered — try Sign in instead.' : (err.message || 'Could not create account.'));
+  });
+}
+function emailForgotPassword(){
+  const email = document.getElementById('emailAuthEmail').value.trim();
+  emailAuthError('');
+  if(!email){ emailAuthError('Enter your email above first, then tap "Forgot password?" again.'); return; }
+  auth.sendPasswordResetEmail(email).then(()=>{
+    emailAuthError('');
+    showBannerRaw('Password reset email sent — check your inbox ✓');
+  }).catch(err => {
+    emailAuthError(err.code === 'auth/user-not-found' ? 'No account found with that email.' : (err.message || 'Could not send reset email.'));
   });
 }
 
