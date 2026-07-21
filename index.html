@@ -398,6 +398,45 @@
   .ayah-span{transition:background .25s ease, box-shadow .25s ease; border-radius:6px;}
   .ayah-span.ayah-playing{background:var(--gold-dim); box-shadow:0 0 0 1px var(--gold-dim);}
 
+  /* ---- Asma full-screen reader ---- */
+  .asma-fullview-btn{
+    width:40px; height:40px; border-radius:13px; background:var(--glass); border:1px solid var(--glass-brd);
+    color:var(--gold); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
+  }
+  .asma-fullview-btn:active{transform:scale(.94);}
+  #asmaFullView{
+    display:none; position:fixed; inset:0; z-index:300; flex-direction:column;
+    background:linear-gradient(180deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
+    padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px);
+  }
+  .afv-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .afv-count{font-family:'Poppins',sans-serif; font-size:12.5px; color:var(--muted); letter-spacing:1px;}
+  .afv-progress{height:3px; border-radius:3px; background:var(--glass-brd); margin-top:14px; overflow:hidden;}
+  .afv-progress-bar{height:100%; background:var(--gold); border-radius:3px; transition:width .25s ease;}
+  .afv-card{
+    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:14px; padding:20px 6px; touch-action:pan-y;
+  }
+  .afv-num{
+    width:34px; height:34px; border-radius:50%; border:1px solid var(--gold); color:var(--gold);
+    display:flex; align-items:center; justify-content:center; font-size:12.5px; font-family:'Poppins',sans-serif;
+  }
+  .afv-arabic{font-size:52px; line-height:1.5; color:var(--ink);}
+  .afv-translit{font-family:'Poppins',sans-serif; font-size:18px; color:var(--gold-soft); font-weight:600;}
+  .afv-meaning{font-size:15px; color:var(--muted); max-width:320px; line-height:1.5;}
+  .afv-play{
+    width:64px; height:64px; border-radius:50%; background:var(--gold); color:#1a1206; border:none;
+    font-size:24px; display:flex; align-items:center; justify-content:center; margin-top:6px;
+  }
+  .afv-play:active{transform:scale(.95);}
+  .afv-nav{display:flex; align-items:center; justify-content:space-between; gap:14px;}
+  .afv-nav-btn{
+    flex:1; padding:14px; border-radius:14px; border:1px solid var(--glass-brd); background:var(--glass);
+    color:var(--ink); font-size:14px; font-weight:600;
+  }
+  .afv-nav-btn:active{transform:scale(.97);}
+  .afv-nav-btn:disabled{opacity:.35;}
+
   /* ---------- notes ---------- */
   #notesArea{
     width:100%; min-height:220px; background:var(--glass); border:1px solid var(--glass-brd);
@@ -853,13 +892,35 @@
 </div>
 
 <div id="page-asma" class="page">
-  <div class="section-title">99 Names of Allah</div>
+  <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+    <span>99 Names of Allah</span>
+    <button class="asma-fullview-btn" onclick="openAsmaFullView()" title="Full-screen reading view">⛶</button>
+  </div>
   <div class="qtabs">
     <button class="qtab active" id="atab-arabic" onclick="switchAsmaMode('arabic')">🕌 Arabic</button>
     <button class="qtab" id="atab-english" onclick="switchAsmaMode('english')">🌍 + English</button>
     <button class="qtab" id="atab-tamil" onclick="switchAsmaMode('tamil')">🇱🇰 + Tamil</button>
   </div>
   <div id="asmaGrid"></div>
+</div>
+
+<div id="asmaFullView">
+  <div class="afv-top">
+    <button class="back-btn" onclick="closeAsmaFullView()">← Close</button>
+    <div class="afv-count" id="afvCount">1 / 99</div>
+  </div>
+  <div class="afv-progress"><div class="afv-progress-bar" id="afvProgressBar" style="width:1%;"></div></div>
+  <div class="afv-card" id="afvCard">
+    <div class="afv-num" id="afvNum">1</div>
+    <div class="afv-arabic" id="afvArabic"></div>
+    <div class="afv-translit" id="afvTranslit"></div>
+    <div class="afv-meaning" id="afvMeaning"></div>
+    <button class="afv-play" id="afvPlayBtn" onclick="afvTogglePlay()">▶</button>
+  </div>
+  <div class="afv-nav">
+    <button class="afv-nav-btn" id="afvPrevBtn" onclick="afvNav(-1)">← Prev</button>
+    <button class="afv-nav-btn" id="afvNextBtn" onclick="afvNav(1)">Next →</button>
+  </div>
 </div>
 
 </main>
@@ -1641,6 +1702,7 @@ function stopHadithSpeech(){
 
 // ---------------- navigation ----------------
 function goPage(name){
+  if(name !== 'asma' && typeof stopAsmaAudio === 'function') stopAsmaAudio();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
@@ -1907,7 +1969,7 @@ function switchAsmaMode(mode){
   document.getElementById('atab-arabic').classList.toggle('active', mode==='arabic');
   document.getElementById('atab-english').classList.toggle('active', mode==='english');
   document.getElementById('atab-tamil').classList.toggle('active', mode==='tamil');
-  if(speechSynthesis.speaking) speechSynthesis.cancel();
+  stopAsmaAudio();
   if(mode === 'tamil' && !asmaTamil){
     fetchAsmaTamil();
     return;
@@ -2001,34 +2063,144 @@ async function fetchAsmaTamil(){
   }
 }
 
-function playAsmaName(i, btn){
-  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
-  if(speechSynthesis.speaking){
-    speechSynthesis.cancel();
-    document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
-    return;
-  }
+// Real Arabic recitation audio for each name (self-hosted, files named 1.mp3..99.mp3
+// matching ASMA_UL_HUSNA order 1:1). Falls back to on-device text-to-speech only if
+// a browser truly has neither, and never shows a blocking popup.
+const asmaAudioEl = new Audio();
+let asmaAudioIndex = null;
+const asmaAudioListeners = [];
+
+function onAsmaAudioIndexChange(fn){ asmaAudioListeners.push(fn); }
+function notifyAsmaAudioChange(){ asmaAudioListeners.forEach(fn => fn(asmaAudioIndex)); }
+
+function resetAsmaPlayButtons(){
+  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+}
+
+function stopAsmaAudio(){
+  asmaAudioEl.pause();
+  asmaAudioEl.currentTime = 0;
+  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  asmaAudioIndex = null;
+  resetAsmaPlayButtons();
+  notifyAsmaAudioChange();
+}
+
+// Speaks the name via device TTS — used only as a last-resort fallback, and
+// only if the browser actually supports it (silently skipped otherwise).
+function speakAsmaFallback(i, onDone){
+  if(!('speechSynthesis' in window)){ onDone && onDone(); return; }
   const n = ASMA_UL_HUSNA[i];
   let text, lang;
-  if(asmaMode === 'arabic'){
-    text = n.ar;
-    lang = 'ar-SA';
-  } else if(asmaMode === 'tamil'){
+  if(asmaMode === 'tamil'){
     text = (asmaTamil && asmaTamil[i]) ? `${n.tr}. ${asmaTamil[i]}` : `${n.tr}. ${n.en}`;
     lang = 'ta-IN';
-  } else {
+  } else if(asmaMode === 'english'){
     text = `${n.tr}. ${n.en}.`;
     lang = 'en-US';
+  } else {
+    text = n.ar;
+    lang = 'ar-SA';
   }
   asmaUtterance = new SpeechSynthesisUtterance(text);
   asmaUtterance.lang = lang;
   asmaUtterance.rate = 0.9;
-  asmaUtterance.onend = () => { btn.textContent = '▶'; };
-  asmaUtterance.onerror = () => { btn.textContent = '▶'; };
-  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+  asmaUtterance.onend = () => onDone && onDone();
+  asmaUtterance.onerror = () => onDone && onDone();
   speechSynthesis.speak(asmaUtterance);
-  btn.textContent = '⏸';
 }
+
+// Plays the real recitation for name index i. If that fails to load (offline,
+// missing file, etc.) it quietly falls back to TTS, and only if that's also
+// unavailable does it stop silently — never a blocking alert.
+function playAsmaAudio(i){
+  if(asmaAudioIndex === i && !asmaAudioEl.paused){
+    stopAsmaAudio();
+    return;
+  }
+  stopAsmaAudio();
+  asmaAudioIndex = i;
+  resetAsmaPlayButtons();
+  notifyAsmaAudioChange();
+
+  asmaAudioEl.onended = () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); };
+  asmaAudioEl.onerror = () => {
+    speakAsmaFallback(i, () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); });
+  };
+  asmaAudioEl.src = `asma-audio/${i + 1}.mp3`;
+  asmaAudioEl.play().catch(() => {
+    speakAsmaFallback(i, () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); });
+  });
+}
+
+function playAsmaName(i, btn){
+  playAsmaAudio(i);
+  onAsmaAudioIndexChange(function updateBtn(idx){
+    btn.textContent = (idx === i) ? '⏸' : '▶';
+  });
+}
+
+// ---------------- 99 Names full-screen reading view ----------------
+let afvIndex = 0;
+let afvTouchStartX = null;
+
+function openAsmaFullView(){
+  afvIndex = 0;
+  document.getElementById('asmaFullView').style.display = 'flex';
+  renderAfv();
+  const card = document.getElementById('afvCard');
+  card.ontouchstart = e => { afvTouchStartX = e.touches[0].clientX; };
+  card.ontouchend = e => {
+    if(afvTouchStartX === null) return;
+    const dx = e.changedTouches[0].clientX - afvTouchStartX;
+    if(Math.abs(dx) > 50) afvNav(dx < 0 ? 1 : -1);
+    afvTouchStartX = null;
+  };
+}
+
+function closeAsmaFullView(){
+  stopAsmaAudio();
+  document.getElementById('asmaFullView').style.display = 'none';
+}
+
+function afvNav(dir){
+  const next = afvIndex + dir;
+  if(next < 0 || next >= ASMA_UL_HUSNA.length) return;
+  stopAsmaAudio();
+  afvIndex = next;
+  renderAfv();
+}
+
+function afvTogglePlay(){
+  playAsmaAudio(afvIndex);
+}
+
+function renderAfv(){
+  const n = ASMA_UL_HUSNA[afvIndex];
+  document.getElementById('afvNum').textContent = afvIndex + 1;
+  document.getElementById('afvArabic').textContent = n.ar;
+  document.getElementById('afvCount').textContent = `${afvIndex + 1} / ${ASMA_UL_HUSNA.length}`;
+  document.getElementById('afvProgressBar').style.width = `${((afvIndex + 1) / ASMA_UL_HUSNA.length) * 100}%`;
+  if(asmaMode === 'arabic'){
+    document.getElementById('afvTranslit').textContent = n.tr;
+    document.getElementById('afvMeaning').textContent = '';
+  } else if(asmaMode === 'tamil'){
+    document.getElementById('afvTranslit').textContent = n.tr;
+    document.getElementById('afvMeaning').textContent = (asmaTamil && asmaTamil[afvIndex]) || n.en;
+  } else {
+    document.getElementById('afvTranslit').textContent = n.tr;
+    document.getElementById('afvMeaning').textContent = n.en;
+  }
+  document.getElementById('afvPrevBtn').disabled = afvIndex === 0;
+  document.getElementById('afvNextBtn').disabled = afvIndex === ASMA_UL_HUSNA.length - 1;
+  document.getElementById('afvPlayBtn').textContent = '▶';
+}
+
+onAsmaAudioIndexChange(function updateFullViewBtn(idx){
+  const btn = document.getElementById('afvPlayBtn');
+  if(!btn) return;
+  btn.textContent = (idx === afvIndex) ? '⏸' : '▶';
+});
 
 // ---------------- Quran (Arabic) & Translation (English) ----------------
 let SURAHS = [];
