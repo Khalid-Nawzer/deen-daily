@@ -1365,15 +1365,30 @@ async function notifyPartner(title, body){
   }catch(e){ /* silent — in-app banner still covers the open-app case */ }
 }
 
-function updateToggles(){
+async function updateToggles(){
   document.getElementById('toggleRadio').classList.toggle('on', radioOn);
   const notifBtn = document.getElementById('toggleNotif');
-  notifBtn.classList.toggle('on', ('Notification' in window) && Notification.permission === 'granted');
+  if(window.Capacitor && Capacitor.isNativePlatform()){
+    try{
+      const { LocalNotifications } = Capacitor.Plugins;
+      const perm = await LocalNotifications.checkPermissions();
+      notifBtn.classList.toggle('on', perm.display === 'granted');
+    }catch(e){ notifBtn.classList.toggle('on', false); }
+  } else {
+    notifBtn.classList.toggle('on', ('Notification' in window) && Notification.permission === 'granted');
+  }
   const soundBtn = document.getElementById('toggleSound');
   soundBtn.classList.toggle('on', localStorage.getItem('deen_audio_unlocked') === '1');
 }
 
-function enableNotifs(){
+async function enableNotifs(){
+  if(window.Capacitor && Capacitor.isNativePlatform()){
+    const { LocalNotifications } = Capacitor.Plugins;
+    const perm = await LocalNotifications.requestPermissions();
+    await updateToggles();
+    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); }
+    return;
+  }
   if(!('Notification' in window)) return;
   Notification.requestPermission().then(perm => {
     updateToggles();
