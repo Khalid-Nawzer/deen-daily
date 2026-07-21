@@ -17,6 +17,18 @@ jobs:
           mkdir -p www
           cp index.html manifest.json icon-192.png icon-512.png azan.mp3 sw.js www/
       - run: npx cap add android
+      - name: Apply custom app icon
+        run: |
+          cp mipmap-mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp mipmap-mdpi.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+          cp mipmap-hdpi.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp mipmap-hdpi.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+          cp mipmap-xhdpi.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp mipmap-xhdpi.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+          cp mipmap-xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp mipmap-xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+          cp mipmap-xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          cp mipmap-xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
       - run: npx cap sync android
       - run: |
           mkdir -p android/app/src/main/res/raw
