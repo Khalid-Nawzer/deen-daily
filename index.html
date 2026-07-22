@@ -49,16 +49,16 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
   :root{
-    --bg-0:#070F18; --bg-1:#0E2132; --bg-2:#173049;
-    --glass:rgba(255,255,255,.045); --glass-brd:rgba(255,255,255,.09); --glass-hi:rgba(255,255,255,.08);
+    --bg-0:#04140F; --bg-1:#0A2B24; --bg-2:#123B35;
+    --glass:rgba(255,255,255,.05); --glass-brd:rgba(255,255,255,.10); --glass-hi:rgba(255,255,255,.09);
     --gold:#D4AF37; --gold-soft:#EAD08A; --gold-dim:rgba(212,175,55,.18);
     --rose:#C97B84; --rose-dim:rgba(201,123,132,.18);
-    --emerald:#3E9C77;
-    --ink:#F4EFE3; --muted:#89A3B2; --muted-dim:#5A7482;
+    --emerald:#2FA184; --emerald-soft:#6FCBAE; --emerald-dim:rgba(47,161,132,.20);
+    --ink:#F5F1E6; --muted:#8FB3A8; --muted-dim:#5C7A70;
     --danger:#E0716B;
-    --line:rgba(212,175,55,.14);
-    --r-lg:22px; --r-md:16px; --r-sm:12px;
-    --shadow:0 10px 30px rgba(0,0,0,.35);
+    --line:rgba(212,175,55,.16);
+    --r-lg:26px; --r-md:19px; --r-sm:13px;
+    --shadow:0 12px 34px rgba(0,0,0,.4);
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth;}
@@ -111,19 +111,26 @@
 
   /* ---------- hero ring ---------- */
   .hero{
-    margin-top:18px; padding:22px 18px; border-radius:var(--r-lg);
-    background:linear-gradient(160deg, var(--glass-hi), var(--glass));
+    position:relative; overflow:hidden;
+    margin-top:18px; padding:24px 18px 18px; border-radius:var(--r-lg);
+    background:
+      radial-gradient(120px 90px at 85% -10%, rgba(212,175,55,.22), transparent 70%),
+      linear-gradient(160deg, rgba(47,161,132,.16), var(--glass-hi) 40%, var(--glass));
     border:1px solid var(--glass-brd); box-shadow:var(--shadow);
     display:flex; align-items:center; gap:18px; backdrop-filter:blur(14px);
   }
-  .ring-wrap{position:relative; width:118px; height:118px; flex-shrink:0;}
+  .hero-skyline{
+    position:absolute; left:0; right:0; bottom:0; height:56px; opacity:.16; pointer-events:none;
+  }
+  .hero-skyline svg{width:100%; height:100%;}
+  .ring-wrap{position:relative; width:118px; height:118px; flex-shrink:0; z-index:1;}
   .ring-wrap svg{transform:rotate(-90deg);}
   .ring-center{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;}
   .ring-center .num{font-family:'Poppins',sans-serif; font-size:22px; font-weight:700; color:var(--gold-soft);}
   .ring-center .lbl{font-size:9.5px; color:var(--muted); letter-spacing:1px; text-transform:uppercase;}
-  .hero-info{flex:1;}
-  .hero-next{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--muted); font-weight:600;}
-  .hero-name{font-family:'Amiri',serif; font-size:26px; color:var(--ink); margin:2px 0 2px;}
+  .hero-info{flex:1; position:relative; z-index:1;}
+  .hero-next{font-size:11px; letter-spacing:1.5px; text-transform:uppercase; color:var(--emerald-soft); font-weight:700;}
+  .hero-name{font-family:'Amiri',serif; font-size:27px; color:var(--ink); margin:2px 0 2px;}
   .hero-count{font-size:13px; color:var(--gold-soft); font-weight:600;}
   .hero-streak{margin-top:8px; display:inline-flex; align-items:center; gap:5px; font-size:11.5px; color:var(--rose); background:var(--rose-dim); padding:4px 10px; border-radius:20px; font-weight:600;}
 
@@ -705,6 +712,30 @@
   <div class="whoami" id="whoamiStatus"></div>
 
   <div class="hero">
+    <div class="hero-skyline">
+      <svg viewBox="0 0 400 56" preserveAspectRatio="none">
+        <g fill="#D4AF37">
+          <rect x="10" y="30" width="6" height="26"/>
+          <polygon points="13,20 9,30 17,30"/>
+          <rect x="40" y="14" width="7" height="42"/>
+          <polygon points="43.5,2 39,14 48,14"/>
+          <path d="M70 56 V32 Q70 16 95 16 Q120 16 120 32 V56 Z"/>
+          <ellipse cx="95" cy="14" rx="20" ry="12"/>
+          <rect x="91" y="0" width="8" height="10"/>
+          <rect x="150" y="24" width="6" height="32"/>
+          <polygon points="153,14 149,24 157,24"/>
+          <path d="M180 56 V36 Q180 22 205 22 Q230 22 230 36 V56 Z"/>
+          <ellipse cx="205" cy="20" rx="17" ry="10"/>
+          <rect x="260" y="18" width="7" height="38"/>
+          <polygon points="263.5,6 259,18 268,18"/>
+          <path d="M300 56 V30 Q300 12 330 12 Q360 12 360 30 V56 Z"/>
+          <ellipse cx="330" cy="10" rx="22" ry="13"/>
+          <rect x="326" y="-4" width="8" height="12"/>
+          <rect x="385" y="28" width="6" height="28"/>
+          <polygon points="388,18 384,28 392,28"/>
+        </g>
+      </svg>
+    </div>
     <div class="ring-wrap">
       <svg width="118" height="118" viewBox="0 0 118 118">
         <circle cx="59" cy="59" r="50" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="10"/>
