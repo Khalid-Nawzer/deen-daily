@@ -322,6 +322,18 @@
   .surah-info{flex:1;}
   .surah-name{font-weight:700; font-size:14.5px;}
   .surah-sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
+  .prophet-icon{
+    width:52px; height:52px; border-radius:14px; flex-shrink:0;
+    background:var(--gold-dim); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center;
+    padding:8px;
+  }
+  .prophet-icon svg{width:100%; height:100%;}
+  .prophet-icon-lg{
+    width:120px; height:120px; border-radius:24px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center;
+    background:radial-gradient(circle at 40% 30%, rgba(212,175,55,.18), var(--glass)); border:1px solid var(--gold); padding:20px;
+  }
+  .prophet-icon-lg svg{width:100%; height:100%;}
+  .prophet-story-text{font-size:14px; color:var(--ink); line-height:1.75; margin-top:6px;}
   .back-btn{
     background:var(--glass); border:1px solid var(--glass-brd); color:var(--gold); font-size:13px; font-weight:700;
     padding:9px 16px; margin-bottom:12px; border-radius:12px; display:inline-flex; align-items:center; gap:6px;
@@ -397,45 +409,6 @@
   .mushaf-audio-status{font-size:11px; color:var(--muted); white-space:nowrap;}
   .ayah-span{transition:background .25s ease, box-shadow .25s ease; border-radius:6px;}
   .ayah-span.ayah-playing{background:var(--gold-dim); box-shadow:0 0 0 1px var(--gold-dim);}
-
-  /* ---- Asma full-screen reader ---- */
-  .asma-fullview-btn{
-    width:40px; height:40px; border-radius:13px; background:var(--glass); border:1px solid var(--glass-brd);
-    color:var(--gold); display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:16px;
-  }
-  .asma-fullview-btn:active{transform:scale(.94);}
-  #asmaFullView{
-    display:none; position:fixed; inset:0; z-index:300; flex-direction:column;
-    background:linear-gradient(180deg, var(--bg-0), var(--bg-1) 45%, var(--bg-2));
-    padding:calc(env(safe-area-inset-top) + 16px) 20px calc(env(safe-area-inset-bottom) + 20px);
-  }
-  .afv-top{display:flex; align-items:center; justify-content:space-between; gap:10px;}
-  .afv-count{font-family:'Poppins',sans-serif; font-size:12.5px; color:var(--muted); letter-spacing:1px;}
-  .afv-progress{height:3px; border-radius:3px; background:var(--glass-brd); margin-top:14px; overflow:hidden;}
-  .afv-progress-bar{height:100%; background:var(--gold); border-radius:3px; transition:width .25s ease;}
-  .afv-card{
-    flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; gap:14px; padding:20px 6px; touch-action:pan-y;
-  }
-  .afv-num{
-    width:34px; height:34px; border-radius:50%; border:1px solid var(--gold); color:var(--gold);
-    display:flex; align-items:center; justify-content:center; font-size:12.5px; font-family:'Poppins',sans-serif;
-  }
-  .afv-arabic{font-size:52px; line-height:1.5; color:var(--ink);}
-  .afv-translit{font-family:'Poppins',sans-serif; font-size:18px; color:var(--gold-soft); font-weight:600;}
-  .afv-meaning{font-size:15px; color:var(--muted); max-width:320px; line-height:1.5;}
-  .afv-play{
-    width:64px; height:64px; border-radius:50%; background:var(--gold); color:#1a1206; border:none;
-    font-size:24px; display:flex; align-items:center; justify-content:center; margin-top:6px;
-  }
-  .afv-play:active{transform:scale(.95);}
-  .afv-nav{display:flex; align-items:center; justify-content:space-between; gap:14px;}
-  .afv-nav-btn{
-    flex:1; padding:14px; border-radius:14px; border:1px solid var(--glass-brd); background:var(--glass);
-    color:var(--ink); font-size:14px; font-weight:600;
-  }
-  .afv-nav-btn:active{transform:scale(.97);}
-  .afv-nav-btn:disabled{opacity:.35;}
 
   /* ---------- notes ---------- */
   #notesArea{
@@ -778,6 +751,13 @@
   </div>
   <audio id="islamicRadioAudio" preload="none"></audio>
 
+  <div class="section-title">Stories of the Prophets</div>
+  <div class="live-grid" style="grid-template-columns:1fr;">
+    <div class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left; cursor:pointer;" onclick="goPage('prophets')">
+      🌙 <span>Read &amp; Listen<span class="live-sub" style="display:block;">15 prophets — symbolic art, no depictions, full narration</span></span>
+    </div>
+  </div>
+
   <div class="section-title">Beneficial Videos</div>
   <div class="live-grid" style="grid-template-columns:1fr;">
     <a class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left;"
@@ -787,10 +767,6 @@
     <a class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left;"
        href="https://www.youtube.com/results?search_query=signs+of+the+last+day+qiyamah+lecture" target="_blank" rel="noopener">
       ⏳ <span>Signs of the Last Day<span class="live-sub" style="display:block;">Preparing with awareness, not fear</span></span>
-    </a>
-    <a class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left;"
-       href="https://www.youtube.com/results?search_query=stories+of+the+prophets+quran+lecture" target="_blank" rel="noopener">
-      📜 <span>Stories of the Prophets<span class="live-sub" style="display:block;">Lessons from those who came before</span></span>
     </a>
     <a class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left;"
        href="https://www.youtube.com/results?search_query=understanding+the+quran+tafsir+for+beginners" target="_blank" rel="noopener">
@@ -892,10 +868,7 @@
 </div>
 
 <div id="page-asma" class="page">
-  <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-    <span>99 Names of Allah</span>
-    <button class="asma-fullview-btn" onclick="openAsmaFullView()" title="Full-screen reading view">⛶</button>
-  </div>
+  <div class="section-title">99 Names of Allah</div>
   <div class="qtabs">
     <button class="qtab active" id="atab-arabic" onclick="switchAsmaMode('arabic')">🕌 Arabic</button>
     <button class="qtab" id="atab-english" onclick="switchAsmaMode('english')">🌍 + English</button>
@@ -904,22 +877,11 @@
   <div id="asmaGrid"></div>
 </div>
 
-<div id="asmaFullView">
-  <div class="afv-top">
-    <button class="back-btn" onclick="closeAsmaFullView()">← Close</button>
-    <div class="afv-count" id="afvCount">1 / 99</div>
-  </div>
-  <div class="afv-progress"><div class="afv-progress-bar" id="afvProgressBar" style="width:1%;"></div></div>
-  <div class="afv-card" id="afvCard">
-    <div class="afv-num" id="afvNum">1</div>
-    <div class="afv-arabic" id="afvArabic"></div>
-    <div class="afv-translit" id="afvTranslit"></div>
-    <div class="afv-meaning" id="afvMeaning"></div>
-    <button class="afv-play" id="afvPlayBtn" onclick="afvTogglePlay()">▶</button>
-  </div>
-  <div class="afv-nav">
-    <button class="afv-nav-btn" id="afvPrevBtn" onclick="afvNav(-1)">← Prev</button>
-    <button class="afv-nav-btn" id="afvNextBtn" onclick="afvNav(1)">Next →</button>
+<div id="page-prophets" class="page">
+  <div id="prophetsGrid"></div>
+  <div id="prophetDetail" style="display:none;">
+    <button class="back-btn" onclick="closeProphetDetail()">← All Prophets</button>
+    <div id="prophetDetailContent"></div>
   </div>
 </div>
 
@@ -1702,17 +1664,17 @@ function stopHadithSpeech(){
 
 // ---------------- navigation ----------------
 function goPage(name){
-  if(name !== 'asma' && typeof stopAsmaAudio === 'function') stopAsmaAudio();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
-  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('nav-'+name)?.classList.add('active');
   window.scrollTo(0,0);
   if(name === 'adhkar' && !adhkarRendered){ renderAdhkar(); }
   if(name === 'quran' && !quranListLoaded){ loadSurahList(); }
   if(name === 'asma' && !asmaRendered){ renderAsma(); }
   if(name === 'ai' && !aiChipsRendered){ renderChips(); }
   if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
+  if(name === 'prophets' && !prophetsRendered){ renderProphets(); }
 }
 
 // ---------------- Adhkar & Duas library ----------------
@@ -1969,7 +1931,7 @@ function switchAsmaMode(mode){
   document.getElementById('atab-arabic').classList.toggle('active', mode==='arabic');
   document.getElementById('atab-english').classList.toggle('active', mode==='english');
   document.getElementById('atab-tamil').classList.toggle('active', mode==='tamil');
-  stopAsmaAudio();
+  if(speechSynthesis.speaking) speechSynthesis.cancel();
   if(mode === 'tamil' && !asmaTamil){
     fetchAsmaTamil();
     return;
@@ -2063,144 +2025,147 @@ async function fetchAsmaTamil(){
   }
 }
 
-// Real Arabic recitation audio for each name (self-hosted, files named 1.mp3..99.mp3
-// matching ASMA_UL_HUSNA order 1:1). Falls back to on-device text-to-speech only if
-// a browser truly has neither, and never shows a blocking popup.
-const asmaAudioEl = new Audio();
-let asmaAudioIndex = null;
-const asmaAudioListeners = [];
-
-function onAsmaAudioIndexChange(fn){ asmaAudioListeners.push(fn); }
-function notifyAsmaAudioChange(){ asmaAudioListeners.forEach(fn => fn(asmaAudioIndex)); }
-
-function resetAsmaPlayButtons(){
-  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
-}
-
-function stopAsmaAudio(){
-  asmaAudioEl.pause();
-  asmaAudioEl.currentTime = 0;
-  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
-  asmaAudioIndex = null;
-  resetAsmaPlayButtons();
-  notifyAsmaAudioChange();
-}
-
-// Speaks the name via device TTS — used only as a last-resort fallback, and
-// only if the browser actually supports it (silently skipped otherwise).
-function speakAsmaFallback(i, onDone){
-  if(!('speechSynthesis' in window)){ onDone && onDone(); return; }
+function playAsmaName(i, btn){
+  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
+  if(speechSynthesis.speaking){
+    speechSynthesis.cancel();
+    document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+    return;
+  }
   const n = ASMA_UL_HUSNA[i];
   let text, lang;
-  if(asmaMode === 'tamil'){
-    text = (asmaTamil && asmaTamil[i]) ? `${n.tr}. ${asmaTamil[i]}` : `${n.tr}. ${n.en}`;
-    lang = 'ta-IN';
-  } else if(asmaMode === 'english'){
-    text = `${n.tr}. ${n.en}.`;
-    lang = 'en-US';
-  } else {
+  if(asmaMode === 'arabic'){
     text = n.ar;
     lang = 'ar-SA';
+  } else if(asmaMode === 'tamil'){
+    text = (asmaTamil && asmaTamil[i]) ? `${n.tr}. ${asmaTamil[i]}` : `${n.tr}. ${n.en}`;
+    lang = 'ta-IN';
+  } else {
+    text = `${n.tr}. ${n.en}.`;
+    lang = 'en-US';
   }
   asmaUtterance = new SpeechSynthesisUtterance(text);
   asmaUtterance.lang = lang;
   asmaUtterance.rate = 0.9;
-  asmaUtterance.onend = () => onDone && onDone();
-  asmaUtterance.onerror = () => onDone && onDone();
+  asmaUtterance.onend = () => { btn.textContent = '▶'; };
+  asmaUtterance.onerror = () => { btn.textContent = '▶'; };
+  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
   speechSynthesis.speak(asmaUtterance);
+  btn.textContent = '⏸';
 }
 
-// Plays the real recitation for name index i. If that fails to load (offline,
-// missing file, etc.) it quietly falls back to TTS, and only if that's also
-// unavailable does it stop silently — never a blocking alert.
-function playAsmaAudio(i){
-  if(asmaAudioIndex === i && !asmaAudioEl.paused){
-    stopAsmaAudio();
-    return;
-  }
-  stopAsmaAudio();
-  asmaAudioIndex = i;
-  resetAsmaPlayButtons();
-  notifyAsmaAudioChange();
+// ---------------- Stories of the Prophets (symbolic art only — no depictions) ----------------
+const ICON_STROKE = 'stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"';
+const PROPHETS = [
+  { name:'Adam', ar:'آدم', title:'The First Human', symbol:'Garden & Light',
+    icon:`<svg viewBox="0 0 100 100"><circle cx="50" cy="30" r="10" ${ICON_STROKE}/><path d="M50 40 V70 M50 50 L35 40 M50 55 L65 45 M35 75 H65" ${ICON_STROKE}/><path d="M50 10 L50 18 M35 15 L40 22 M65 15 L60 22" ${ICON_STROKE}/></svg>`,
+    story:`Allah created Adam from clay and breathed life into him, honoring him with knowledge no other creation was given — teaching him the names of all things. He was placed in Paradise with his wife, and both were warned away from a single tree. Shaytan whispered doubt until they ate from it, and they were sent down to the earth — not abandoned, but as the first in a long line entrusted with guidance. Adam repented sincerely, and Allah accepted his repentance, teaching every generation after him that turning back to Allah is always open.` },
+  { name:'Nuh', ar:'نوح', title:'The Patient Caller', symbol:'The Ark',
+    icon:`<svg viewBox="0 0 100 100"><path d="M20 55 Q50 70 80 55 L72 68 Q50 78 28 68 Z" ${ICON_STROKE}/><path d="M50 55 V25 M50 30 L62 25 M40 45 H60" ${ICON_STROKE}/><path d="M10 60 Q20 55 30 60 M70 60 Q80 55 90 60" ${ICON_STROKE}/></svg>`,
+    story:`Nuh called his people to worship Allah alone for nine hundred and fifty years, with patience through mockery and rejection. When only a small number believed, Allah commanded him to build a great ark. The skies opened and the earth burst forth with springs; a flood covered the land, and the ark carried the believers and pairs of every creature to safety. Even Nuh's own son refused to board and was lost. When the waters receded, the ark settled, and a new beginning was given to those who had trusted in Allah's command.` },
+  { name:'Ibrahim', ar:'إبراهيم', title:'The Friend of Allah', symbol:'The Cool Fire',
+    icon:`<svg viewBox="0 0 100 100"><path d="M50 20 Q35 40 45 55 Q35 60 40 75 Q50 85 60 75 Q65 60 55 55 Q65 40 50 20" ${ICON_STROKE}/><circle cx="50" cy="58" r="8" ${ICON_STROKE}/></svg>`,
+    story:`Ibrahim grew up questioning the idol-worship of his people, breaking their idols to show them their helplessness. Enraged, they built a great fire and cast him into it. Allah commanded, "O fire, be coolness and safety upon Ibrahim" — and he walked out unharmed. Later in life, Ibrahim was tested with a vision commanding him to sacrifice his son Ismail. As both submitted to Allah's will, Allah replaced the sacrifice with a ram. Ibrahim and Ismail together raised the foundations of the Kaaba in Makkah, a house of worship for all generations that followed.` },
+  { name:'Ismail', ar:'إسماعيل', title:'The Submitting Son', symbol:'Zamzam & Sacrifice',
+    icon:`<svg viewBox="0 0 100 100"><path d="M30 30 Q50 15 70 30 L65 45 Q50 35 35 45 Z" ${ICON_STROKE}/><circle cx="50" cy="65" r="18" ${ICON_STROKE}/><path d="M50 55 V75 M42 65 H58" ${ICON_STROKE}/></svg>`,
+    story:`As an infant, Ismail was left with his mother Hajar in the barren valley of Makkah by Allah's command. When their water ran out, Hajar ran desperately between the hills of Safa and Marwah searching for help — and beneath the baby's feet, the spring of Zamzam burst forth, flowing to this day. Ismail grew up in that valley, and as a young man, he willingly agreed to his father's vision to sacrifice him for Allah's sake, saying he would be found patient. His trust was answered with life, and together he and Ibrahim built the Kaaba.` },
+  { name:'Ishaq', ar:'إسحاق', title:'The Promised Son', symbol:'The Star of Promise',
+    icon:`<svg viewBox="0 0 100 100"><path d="M50 20 L58 42 L82 42 L62 56 L70 78 L50 64 L30 78 L38 56 L18 42 L42 42 Z" ${ICON_STROKE}/></svg>`,
+    story:`Ishaq was born to Ibrahim and Sarah in their old age, a child promised by Allah as glad tidings and confirmed by angels who visited Ibrahim's home. His birth fulfilled a covenant — that Ibrahim's line would carry forward guidance for generations of prophets to come. Ishaq lived a life of righteousness, later becoming a father to Yaqub, continuing the chain of prophethood that Allah had promised his father.` },
+  { name:'Yaqub', ar:'يعقوب', title:'The Patient Father', symbol:'The Lantern of Hope',
+    icon:`<svg viewBox="0 0 100 100"><path d="M40 35 H60 V65 H40 Z" ${ICON_STROKE}/><path d="M45 35 V25 H55 V35 M42 65 L38 78 H62 L58 65" ${ICON_STROKE}/><circle cx="50" cy="50" r="6" ${ICON_STROKE}/></svg>`,
+    story:`Yaqub, son of Ishaq, loved his son Yusuf dearly, and grieved for decades after Yusuf's jealous brothers deceived him and left him for lost. Yaqub's eyes grew white with the grief he carried, yet he never lost hope in Allah, saying, "I only complain of my anguish and my grief to Allah." Years later, when Yusuf's shirt was brought to him, Yaqub's sight was restored — a reunion that showed how patience joined with unwavering trust in Allah is never wasted, however long the trial.` },
+  { name:'Yusuf', ar:'يوسف', title:'The Truthful One', symbol:'Eleven Stars, Sun & Moon',
+    icon:`<svg viewBox="0 0 100 100"><circle cx="50" cy="25" r="9" ${ICON_STROKE}/><path d="M75 40 Q80 30 75 20 Q85 25 82 35 Q88 32 85 42 Q80 45 75 40" ${ICON_STROKE}/><g ${ICON_STROKE}><circle cx="20" cy="55" r="2.5"/><circle cx="32" cy="70" r="2.5"/><circle cx="48" cy="80" r="2.5"/><circle cx="65" cy="78" r="2.5"/><circle cx="80" cy="65" r="2.5"/><circle cx="85" cy="48" r="2.5"/><circle cx="15" cy="40" r="2.5"/><circle cx="30" cy="30" r="2.5"/><circle cx="55" cy="60" r="2.5"/><circle cx="40" cy="50" r="2.5"/><circle cx="65" cy="55" r="2.5"/></g></svg>`,
+    story:`As a boy, Yusuf saw eleven stars, the sun, and the moon prostrating to him — a dream of a great future. His jealous brothers threw him into a well; he was later found and sold into slavery in Egypt. Falsely accused and imprisoned despite his innocence, Yusuf remained patient and truthful, interpreting dreams even in prison. His honesty and wisdom eventually raised him to oversee Egypt's stores through years of famine. When his brothers came seeking grain, not recognizing him, Yusuf forgave them completely, and his family was reunited — his early dream fulfilled exactly as Allah had shown him.` },
+  { name:'Musa', ar:'موسى', title:'The One Who Spoke With Allah', symbol:'The Staff & The Sea',
+    icon:`<svg viewBox="0 0 100 100"><path d="M50 15 V70" ${ICON_STROKE}/><path d="M46 70 Q50 78 54 70" ${ICON_STROKE}/><path d="M15 55 Q25 45 35 55 T55 55 M65 55 Q75 45 85 55" ${ICON_STROKE}/></svg>`,
+    story:`Musa was raised in Pharaoh's own household after being placed in a basket on the river as an infant to escape a massacre of Hebrew children. As a grown man, Allah spoke to him directly at the burning bush and sent him to confront Pharaoh's tyranny. His staff became a serpent before Pharaoh's magicians, and when Pharaoh's army pursued the fleeing Israelites, Musa struck the sea with his staff — it split into two walls of water, letting his people cross safely while the pursuing army was drowned. Musa later received the Torah, guiding his people through decades in the wilderness.` },
+  { name:'Harun', ar:'هارون', title:'The Eloquent Helper', symbol:'The Tablets of Light',
+    icon:`<svg viewBox="0 0 100 100"><path d="M35 20 V80 H65 V20 Z" ${ICON_STROKE}/><path d="M42 35 H58 M42 48 H58 M42 61 H58" ${ICON_STROKE}/><path d="M50 8 L50 18" ${ICON_STROKE}/></svg>`,
+    story:`When Musa was called to confront Pharaoh, he asked Allah to send his brother Harun with him, for Harun was more eloquent in speech and a source of strength and support. Harun stood beside Musa throughout the confrontation with Pharaoh and the long journey afterward, sharing in the responsibility of guiding the Israelites. When Musa went to receive Allah's revelation and left Harun in charge, Harun struggled to stop the people from idol worship in his absence — a reminder of how heavy the responsibility of guidance truly is.` },
+  { name:'Dawud', ar:'داود', title:'The Grateful King', symbol:'Mountains That Glorified With Him',
+    icon:`<svg viewBox="0 0 100 100"><path d="M15 70 L35 40 L50 60 L65 30 L88 70 Z" ${ICON_STROKE}/><path d="M25 55 Q28 50 31 55 M70 45 Q73 40 76 45" ${ICON_STROKE}/></svg>`,
+    story:`Dawud was given both prophethood and kingship, ruling with justice and famed for his beautiful voice — when he recited praise to Allah, it is said the very mountains and birds joined him in glorification. Allah softened iron in his hands, letting him craft armor without fire or hammering. He defeated the tyrant Jalut (Goliath) as a young man, and later became a king who judged between people with remarkable fairness, always remaining humble and turning back to Allah in gratitude and repentance.` },
+  { name:'Sulaiman', ar:'سليمان', title:'The King of Wind & Creatures', symbol:'The Throne & The Wind',
+    icon:`<svg viewBox="0 0 100 100"><path d="M30 75 H70 V55 Q50 45 30 55 Z" ${ICON_STROKE}/><path d="M35 55 V40 M65 55 V40" ${ICON_STROKE}/><path d="M15 30 Q25 20 35 30 M65 30 Q75 20 85 30" ${ICON_STROKE}/></svg>`,
+    story:`Sulaiman inherited prophethood and kingship from his father Dawud, and Allah granted him extraordinary gifts — command over the wind, understanding the speech of birds and ants, and authority over jinn who worked at his command. A hoopoe bird once brought him news of the Queen of Sheba's kingdom, leading to her eventually recognizing the truth of Allah. Despite his immense power and wealth, Sulaiman remained humble before Allah, once asking to be forgiven and granted a kingdom unlike any after him — a request Allah honored, while he always credited every gift to Allah's favor alone.` },
+  { name:'Yunus', ar:'يونس', title:'The Companion of the Whale', symbol:'The Whale in the Depths',
+    icon:`<svg viewBox="0 0 100 100"><path d="M15 50 Q35 30 65 45 Q80 50 85 42 Q88 50 85 58 Q80 50 65 55 Q35 70 15 50 Z" ${ICON_STROKE}/><circle cx="30" cy="48" r="2" fill="#D4AF37"/></svg>`,
+    story:`Yunus left his people in frustration before Allah commanded him to, after they had long rejected his message. He boarded a ship, was cast into the sea during a storm, and swallowed by a great fish. In the darkness of the fish's belly, deep beneath the waves, he called out: "There is no god but You, glory be to You, I have indeed been of the wrongdoers." Allah answered his call and had the fish release him safely onto the shore. He returned to his people, who — remarkably — had come to believe in his absence, saving an entire nation.` },
+  { name:'Ayyub', ar:'أيوب', title:'The Patient in Trial', symbol:'The Healing Spring',
+    icon:`<svg viewBox="0 0 100 100"><path d="M50 20 V50" ${ICON_STROKE}/><path d="M35 50 Q50 65 65 50 Q60 75 50 85 Q40 75 35 50" ${ICON_STROKE}/><circle cx="50" cy="35" r="6" ${ICON_STROKE}/></svg>`,
+    story:`Ayyub was blessed with wealth, family, and health, then tested with the loss of nearly everything — his wealth, his children, and his health over many long years. Through it all, he never ceased praising Allah, becoming the ultimate example of patience mentioned in the Quran. When he finally called out, "Affliction has touched me, and You are the Most Merciful of the merciful," Allah commanded him to strike the ground, and a spring burst forth to restore his health. Everything he had lost was returned to him, doubled, as a reward for his unwavering patience.` },
+  { name:'Isa', ar:'عيسى', title:'The Word From Allah', symbol:'Light Over the Cradle',
+    icon:`<svg viewBox="0 0 100 100"><path d="M30 65 Q50 55 70 65 V78 H30 Z" ${ICON_STROKE}/><path d="M50 20 V45" ${ICON_STROKE}/><path d="M38 30 L50 20 L62 30" ${ICON_STROKE}/></svg>`,
+    story:`Isa was born miraculously to Maryam, without a father, by Allah's command alone — a sign for all people. He spoke while still an infant in the cradle, defending his mother's honor. As a prophet, he called the Children of Israel back to the worship of Allah alone, and was granted miracles by Allah's permission — healing the sick and giving news of the unseen. When his enemies sought to kill him, Allah raised him up to Himself, and he was not killed nor crucified, though it was made to appear so. Muslims believe he will return before the end of time.` },
+  { name:'Muhammad ﷺ', ar:'محمد ﷺ', title:'The Final Messenger', symbol:'The Light of Hira',
+    icon:`<svg viewBox="0 0 100 100"><path d="M15 80 L35 40 L50 55 L65 25 L88 80 Z" ${ICON_STROKE}/><rect x="42" y="42" width="14" height="10" ${ICON_STROKE}/><path d="M65 25 L58 18 M65 25 L72 18 M65 25 L65 12" ${ICON_STROKE}/></svg>`,
+    story:`In a small cave on Mount Hira outside Makkah, where he often withdrew to reflect, Muhammad ﷺ received the first revelation of the Quran through the angel Jibril at the age of forty. Over the following twenty-three years, he delivered Allah's final message, calling people from idol worship back to the oneness of Allah, enduring years of persecution with patience and mercy — even toward those who wronged him. He established a just community in Madinah, and by his passing, the message of Islam had reached across Arabia, carried afterward to the far corners of the world, as the final Messenger for all of humanity until the Last Day.` }
+];
+let prophetsRendered = false;
+let prophetUtterance = null;
 
-  asmaAudioEl.onended = () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); };
-  asmaAudioEl.onerror = () => {
-    speakAsmaFallback(i, () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); });
-  };
-  asmaAudioEl.src = `asma-audio/${i + 1}.mp3`;
-  asmaAudioEl.play().catch(() => {
-    speakAsmaFallback(i, () => { asmaAudioIndex = null; resetAsmaPlayButtons(); notifyAsmaAudioChange(); });
-  });
+function renderProphets(){
+  const el = document.getElementById('prophetsGrid');
+  el.innerHTML = `
+    <div class="dhikr-meaning" style="margin-bottom:16px;">Symbolic art only — no depictions of any prophet, as is proper in Islamic tradition. Tap a card to read and listen.</div>
+    ${PROPHETS.map((p,i) => `
+      <div class="surah-row" onclick="openProphet(${i})">
+        <div class="prophet-icon">${p.icon}</div>
+        <div class="surah-info">
+          <div class="surah-name">${p.name} <span style="color:var(--muted); font-weight:400;">— ${p.ar}</span></div>
+          <div class="surah-sub">${p.title} · ${p.symbol}</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+  prophetsRendered = true;
 }
 
-function playAsmaName(i, btn){
-  playAsmaAudio(i);
-  onAsmaAudioIndexChange(function updateBtn(idx){
-    btn.textContent = (idx === i) ? '⏸' : '▶';
-  });
+function openProphet(i){
+  const p = PROPHETS[i];
+  document.getElementById('prophetsGrid').style.display = 'none';
+  const detail = document.getElementById('prophetDetail');
+  detail.style.display = 'block';
+  document.getElementById('prophetDetailContent').innerHTML = `
+    <div class="prophet-icon-lg">${p.icon}</div>
+    <div style="text-align:center; margin-bottom:18px;">
+      <div class="hero-name" style="font-size:24px;">${p.name} <span style="color:var(--muted); font-size:18px;">— ${p.ar}</span></div>
+      <div class="prayer-time" style="margin-top:4px;">${p.title}</div>
+    </div>
+    <div class="ayah-block">
+      <div class="prophet-story-text" id="prophetStoryText">${p.story}</div>
+      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+    </div>
+  `;
+  window.scrollTo(0,0);
 }
 
-// ---------------- 99 Names full-screen reading view ----------------
-let afvIndex = 0;
-let afvTouchStartX = null;
-
-function openAsmaFullView(){
-  afvIndex = 0;
-  document.getElementById('asmaFullView').style.display = 'flex';
-  renderAfv();
-  const card = document.getElementById('afvCard');
-  card.ontouchstart = e => { afvTouchStartX = e.touches[0].clientX; };
-  card.ontouchend = e => {
-    if(afvTouchStartX === null) return;
-    const dx = e.changedTouches[0].clientX - afvTouchStartX;
-    if(Math.abs(dx) > 50) afvNav(dx < 0 ? 1 : -1);
-    afvTouchStartX = null;
-  };
+function closeProphetDetail(){
+  document.getElementById('prophetDetail').style.display = 'none';
+  document.getElementById('prophetsGrid').style.display = 'block';
+  stopProphetSpeech();
 }
 
-function closeAsmaFullView(){
-  stopAsmaAudio();
-  document.getElementById('asmaFullView').style.display = 'none';
+function toggleProphetSpeech(i){
+  const btn = document.getElementById('prophetPlayBtn');
+  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
+  if(speechSynthesis.speaking){ stopProphetSpeech(); return; }
+  const p = PROPHETS[i];
+  prophetUtterance = new SpeechSynthesisUtterance(`The story of ${p.name}. ${p.story}`);
+  prophetUtterance.lang = 'en-US';
+  prophetUtterance.rate = 0.95;
+  prophetUtterance.onend = () => { btn.textContent = '▶ Listen to the story'; };
+  prophetUtterance.onerror = () => { btn.textContent = '▶ Listen to the story'; };
+  speechSynthesis.speak(prophetUtterance);
+  btn.textContent = '⏸ Stop';
 }
-
-function afvNav(dir){
-  const next = afvIndex + dir;
-  if(next < 0 || next >= ASMA_UL_HUSNA.length) return;
-  stopAsmaAudio();
-  afvIndex = next;
-  renderAfv();
+function stopProphetSpeech(){
+  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  const btn = document.getElementById('prophetPlayBtn');
+  if(btn) btn.textContent = '▶ Listen to the story';
 }
-
-function afvTogglePlay(){
-  playAsmaAudio(afvIndex);
-}
-
-function renderAfv(){
-  const n = ASMA_UL_HUSNA[afvIndex];
-  document.getElementById('afvNum').textContent = afvIndex + 1;
-  document.getElementById('afvArabic').textContent = n.ar;
-  document.getElementById('afvCount').textContent = `${afvIndex + 1} / ${ASMA_UL_HUSNA.length}`;
-  document.getElementById('afvProgressBar').style.width = `${((afvIndex + 1) / ASMA_UL_HUSNA.length) * 100}%`;
-  if(asmaMode === 'arabic'){
-    document.getElementById('afvTranslit').textContent = n.tr;
-    document.getElementById('afvMeaning').textContent = '';
-  } else if(asmaMode === 'tamil'){
-    document.getElementById('afvTranslit').textContent = n.tr;
-    document.getElementById('afvMeaning').textContent = (asmaTamil && asmaTamil[afvIndex]) || n.en;
-  } else {
-    document.getElementById('afvTranslit').textContent = n.tr;
-    document.getElementById('afvMeaning').textContent = n.en;
-  }
-  document.getElementById('afvPrevBtn').disabled = afvIndex === 0;
-  document.getElementById('afvNextBtn').disabled = afvIndex === ASMA_UL_HUSNA.length - 1;
-  document.getElementById('afvPlayBtn').textContent = '▶';
-}
-
-onAsmaAudioIndexChange(function updateFullViewBtn(idx){
-  const btn = document.getElementById('afvPlayBtn');
-  if(!btn) return;
-  btn.textContent = (idx === afvIndex) ? '⏸' : '▶';
-});
 
 // ---------------- Quran (Arabic) & Translation (English) ----------------
 let SURAHS = [];
