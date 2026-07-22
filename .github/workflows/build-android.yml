@@ -31,6 +31,15 @@ jobs:
           cp mipmap-xxhdpi.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
           cp mipmap-xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
           cp mipmap-xxxhdpi.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+      - name: Grant exact-alarm & notification permissions for reliable background azan
+        run: |
+          python3 -c "
+          p = 'android/app/src/main/AndroidManifest.xml'
+          c = open(p).read()
+          perms = '<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\n<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>\n'
+          c = c.replace('<application', perms + '<application', 1)
+          open(p,'w').write(c)
+          "
       - run: npx cap sync android
       - run: |
           mkdir -p android/app/src/main/res/raw
