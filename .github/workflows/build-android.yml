@@ -12,7 +12,7 @@ jobs:
         with: { node-version: '20' }
       - uses: actions/setup-java@v4
         with: { distribution: 'temurin', java-version: '17' }
-      - run: npm install
+      - run: npm install --legacy-peer-deps  
       - run: |
           mkdir -p www
           cp index.html manifest.json icon-192.png icon-512.png azan.mp3 sw.js www/
