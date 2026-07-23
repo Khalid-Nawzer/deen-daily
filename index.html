@@ -2187,6 +2187,18 @@ const PROPHETS = [
 ];
 let prophetsRendered = false;
 let prophetUtterance = null;
+let currentProphetIndex = 0;
+let prophetLang = 'en'; // 'en' | 'ta' | 'si'
+const PROPHET_LANG_META = {
+  en: { voice:'en-US', label:'English', flag:'🌍' },
+  ta: { voice:'ta-IN', label:'Tamil',   flag:'🇱🇰' },
+  si: { voice:'si-LK', label:'Sinhala', flag:'🇱🇰' }
+};
+// Cached AI translations: each is an array of 15 {title, story} objects, same order as PROPHETS
+let prophetTranslations = {
+  ta: JSON.parse(localStorage.getItem('deen_prophet_ta') || 'null'),
+  si: JSON.parse(localStorage.getItem('deen_prophet_si') || 'null')
+};
 
 function renderProphets(){
   const el = document.getElementById('prophetsGrid');
@@ -2206,24 +2218,104 @@ function renderProphets(){
 }
 
 function openProphet(i){
-  const p = PROPHETS[i];
+  currentProphetIndex = i;
   document.getElementById('prophetsGrid').style.display = 'none';
-  const detail = document.getElementById('prophetDetail');
-  detail.style.display = 'block';
+  document.getElementById('prophetDetail').style.display = 'block';
+  renderProphetDetail();
+  window.scrollTo(0,0);
+}
+
+function getProphetTitle(i){
+  if(prophetLang === 'en') return PROPHETS[i].title;
+  const arr = prophetTranslations[prophetLang];
+  return (arr && arr[i] && arr[i].title) || PROPHETS[i].title;
+}
+function getProphetStory(i){
+  if(prophetLang === 'en') return PROPHETS[i].story;
+  const arr = prophetTranslations[prophetLang];
+  return (arr && arr[i] && arr[i].story) || PROPHETS[i].story;
+}
+function hasProphetTranslation(lang){
+  return lang === 'en' || !!prophetTranslations[lang];
+}
+
+function renderProphetDetail(status){
+  const i = currentProphetIndex;
+  const p = PROPHETS[i];
   const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent('story of prophet ' + p.name.replace(' ﷺ','') + ' islamic lecture')}`;
+
+  const tabsHtml = `
+    <div class="qtabs" style="margin-bottom:14px;">
+      ${Object.keys(PROPHET_LANG_META).map(lang => `
+        <button class="qtab ${prophetLang===lang?'active':''}" onclick="switchProphetLang('${lang}')">${PROPHET_LANG_META[lang].flag} ${PROPHET_LANG_META[lang].label}</button>
+      `).join('')}
+    </div>
+  `;
+
+  let bodyHtml;
+  if(status === 'loading'){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">✨ Translating this story into ${PROPHET_LANG_META[prophetLang].label}…</div>`;
+  } else if(status){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch the ${PROPHET_LANG_META[prophetLang].label} translation right now (${status}). Try this tab again.</div>`;
+  } else if(prophetLang !== 'en' && !hasProphetTranslation(prophetLang)){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Add a free Gemini API key in Settings (⚙️) to unlock ${PROPHET_LANG_META[prophetLang].label} translation and voice-over — see the Dua AI section note for how to get one free.</div>`;
+  } else {
+    bodyHtml = `
+      <div class="prophet-story-text" id="prophetStoryText">${getProphetStory(i)}</div>
+      ${prophetLang !== 'en' ? `<div class="dhikr-meaning" style="margin-top:10px;">✨ AI-assisted translation — please verify with a native speaker for precise wording.</div>` : ''}
+      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+    `;
+  }
+
   document.getElementById('prophetDetailContent').innerHTML = `
     <div class="prophet-icon-lg prophet-icon-xl">${p.icon}</div>
     <div style="text-align:center; margin-bottom:18px;">
       <div class="hero-name" style="font-size:28px;">${p.name} <span style="color:var(--muted); font-size:19px;">— ${p.ar}</span></div>
-      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${p.title}</div>
+      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${getProphetTitle(i)}</div>
     </div>
+    ${tabsHtml}
     <div class="ayah-block">
-      <div class="prophet-story-text" id="prophetStoryText">${p.story}</div>
-      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+      ${bodyHtml}
       <a href="${ytUrl}" target="_blank" rel="noopener" class="mushaf-nav-btn" style="display:block; text-align:center; margin-top:10px; text-decoration:none;">🎬 Watch related videos on YouTube</a>
     </div>
   `;
-  window.scrollTo(0,0);
+}
+
+function switchProphetLang(lang){
+  stopProphetSpeech();
+  prophetLang = lang;
+  if(lang !== 'en' && !hasProphetTranslation(lang)){
+    if(!GEMINI_KEY){ renderProphetDetail(); return; }
+    fetchProphetTranslations(lang);
+    return;
+  }
+  renderProphetDetail();
+}
+
+async function fetchProphetTranslations(lang){
+  renderProphetDetail('loading');
+  const langName = PROPHET_LANG_META[lang].label;
+  const prompt = `Translate the following 15 short Islamic prophet story titles and stories from English into natural, respectful, everyday-reader ${langName}. Keep Islamic proper nouns (Allah, prophet names, place names) as commonly transliterated in ${langName}. Return ONLY a JSON array of 15 objects in the exact same order as given, each with keys "title" and "story" — no markdown, no commentary, no extra text.
+
+${JSON.stringify(PROPHETS.map(p => ({ name:p.name, title:p.title, story:p.story })))}`;
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if(!res.ok) throw new Error('Gemini ' + res.status);
+    const data = await res.json();
+    let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+    raw = raw.replace(/^```json\s*|```$/g, '').trim();
+    const arr = JSON.parse(raw);
+    if(!Array.isArray(arr) || arr.length !== PROPHETS.length) throw new Error('unexpected response shape');
+    prophetTranslations[lang] = arr;
+    localStorage.setItem('deen_prophet_' + lang, JSON.stringify(arr));
+    renderProphetDetail();
+  }catch(e){
+    renderProphetDetail(e.message || 'error');
+  }
 }
 
 function closeProphetDetail(){
@@ -2235,9 +2327,12 @@ function closeProphetDetail(){
 function toggleProphetSpeech(i){
   const btn = document.getElementById('prophetPlayBtn');
   if(isTtsPlaying()){ stopProphetSpeech(); return; }
-  const p = PROPHETS[i];
+  const meta = PROPHET_LANG_META[prophetLang];
+  const text = prophetLang === 'en'
+    ? `The story of ${PROPHETS[i].name}. ${getProphetStory(i)}`
+    : `${getProphetTitle(i)}. ${getProphetStory(i)}`;
   btn.textContent = '⏸ Stop';
-  universalSpeak(`The story of ${p.name}. ${p.story}`, 'en-US', () => {
+  universalSpeak(text, meta.voice, () => {
     btn.textContent = '▶ Listen to the story';
   });
 }
