@@ -330,17 +330,30 @@
   .surah-name{font-weight:700; font-size:14.5px;}
   .surah-sub{font-size:11.5px; color:var(--muted); margin-top:1px;}
   .prophet-icon{
-    width:52px; height:52px; border-radius:14px; flex-shrink:0;
-    background:var(--gold-dim); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center;
-    padding:8px;
+    width:64px; height:64px; border-radius:16px; flex-shrink:0;
+    background:radial-gradient(circle at 35% 30%, rgba(212,175,55,.22), var(--gold-dim)); border:1px solid var(--gold); display:flex; align-items:center; justify-content:center;
+    padding:10px;
   }
   .prophet-icon svg{width:100%; height:100%;}
   .prophet-icon-lg{
     width:120px; height:120px; border-radius:24px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center;
     background:radial-gradient(circle at 40% 30%, rgba(212,175,55,.18), var(--glass)); border:1px solid var(--gold); padding:20px;
   }
+  .prophet-icon-xl{ width:168px; height:168px; border-radius:32px; padding:28px; }
   .prophet-icon-lg svg{width:100%; height:100%;}
-  .prophet-story-text{font-size:14px; color:var(--ink); line-height:1.75; margin-top:6px;}
+  .prophet-story-text{font-size:15px; color:var(--ink); line-height:1.8; margin-top:6px;}
+  .prophet-feature-card{
+    display:flex; align-items:center; gap:14px; cursor:pointer;
+    background:radial-gradient(140px 100px at 90% -10%, rgba(212,175,55,.20), transparent 70%), linear-gradient(150deg, rgba(47,161,132,.14), var(--glass));
+    border:1px solid var(--gold); border-radius:var(--r-lg); padding:18px; box-shadow:var(--shadow);
+  }
+  .prophet-feature-card:active{transform:scale(.98);}
+  .prophet-feature-icons{display:flex; flex-shrink:0;}
+  .prophet-feature-icons svg{width:34px; height:34px; margin-right:-10px; background:var(--bg-1); border-radius:50%; border:2px solid var(--bg-1); padding:4px;}
+  .prophet-feature-text{flex:1;}
+  .prophet-feature-title{font-weight:700; font-size:15px;}
+  .prophet-feature-sub{font-size:11.5px; color:var(--muted); margin-top:2px;}
+  .prophet-feature-arrow{font-size:20px; color:var(--gold); flex-shrink:0;}
   .back-btn{
     background:var(--glass); border:1px solid var(--glass-brd); color:var(--gold); font-size:13px; font-weight:700;
     padding:9px 16px; margin-bottom:12px; border-radius:12px; display:inline-flex; align-items:center; gap:6px;
@@ -783,10 +796,17 @@
   <audio id="islamicRadioAudio" preload="none"></audio>
 
   <div class="section-title">Stories of the Prophets</div>
-  <div class="live-grid" style="grid-template-columns:1fr;">
-    <div class="live-card" style="flex-direction:row; justify-content:flex-start; gap:12px; text-align:left; cursor:pointer;" onclick="goPage('prophets')">
-      🌙 <span>Read &amp; Listen<span class="live-sub" style="display:block;">15 prophets — symbolic art, no depictions, full narration</span></span>
+  <div class="prophet-feature-card" onclick="goPage('prophets')">
+    <div class="prophet-feature-icons">
+      <svg viewBox="0 0 100 100" ${'stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"'}><path d="M20 55 Q50 70 80 55 L72 68 Q50 78 28 68 Z"/><path d="M50 55 V25 M50 30 L62 25 M40 45 H60"/></svg>
+      <svg viewBox="0 0 100 100" ${'stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"'}><path d="M15 80 L35 40 L50 55 L65 25 L88 80 Z"/><rect x="42" y="42" width="14" height="10"/></svg>
+      <svg viewBox="0 0 100 100" ${'stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"'}><path d="M50 15 V70"/><path d="M46 70 Q50 78 54 70"/><path d="M15 55 Q25 45 35 55 T55 55 M65 55 Q75 45 85 55"/></svg>
     </div>
+    <div class="prophet-feature-text">
+      <div class="prophet-feature-title">15 Prophets — Read &amp; Listen</div>
+      <div class="prophet-feature-sub">Symbolic art only, full narration, related videos</div>
+    </div>
+    <div class="prophet-feature-arrow">→</div>
   </div>
 
   <div class="section-title">Beneficial Videos</div>
@@ -1001,6 +1021,7 @@ async function fetchPrayerTimes(){
     PRAYERS.forEach(p => { p.time = t[p.apiKey] || '—'; });
     localStorage.setItem('deen_times_cache', JSON.stringify({date: getSLDateKey(), times: t}));
     scheduleNativeAzanNotifications();
+    scheduleDailyStoryNotification();
   }catch(e){
     const cached = JSON.parse(localStorage.getItem('deen_times_cache') || 'null');
     if(cached && cached.date === getSLDateKey()){
@@ -1677,18 +1698,15 @@ function hadithNext(){
 let hadithUtterance = null;
 function toggleHadithSpeech(){
   const btn = document.getElementById('hadithPlayBtn');
-  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
-  if(speechSynthesis.speaking){ stopHadithSpeech(); return; }
+  if(isTtsPlaying()){ stopHadithSpeech(); return; }
   if(!lastHadithText) return;
-  hadithUtterance = new SpeechSynthesisUtterance(lastHadithText);
-  hadithUtterance.lang = currentHadithLang === 'ta' ? 'ta-IN' : 'en-US';
-  hadithUtterance.onend = () => { btn.textContent = '▶ Listen'; };
-  hadithUtterance.onerror = () => { btn.textContent = '▶ Listen'; };
-  speechSynthesis.speak(hadithUtterance);
   btn.textContent = '⏸ Stop';
+  universalSpeak(lastHadithText, currentHadithLang === 'ta' ? 'ta-IN' : 'en-US', () => {
+    btn.textContent = '▶ Listen';
+  });
 }
 function stopHadithSpeech(){
-  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  universalStop();
   const btn = document.getElementById('hadithPlayBtn');
   if(btn) btn.textContent = '▶ Listen';
 }
@@ -2057,9 +2075,8 @@ async function fetchAsmaTamil(){
 }
 
 function playAsmaName(i, btn){
-  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
-  if(speechSynthesis.speaking){
-    speechSynthesis.cancel();
+  if(isTtsPlaying()){
+    universalStop();
     document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
     return;
   }
@@ -2075,14 +2092,9 @@ function playAsmaName(i, btn){
     text = `${n.tr}. ${n.en}.`;
     lang = 'en-US';
   }
-  asmaUtterance = new SpeechSynthesisUtterance(text);
-  asmaUtterance.lang = lang;
-  asmaUtterance.rate = 0.9;
-  asmaUtterance.onend = () => { btn.textContent = '▶'; };
-  asmaUtterance.onerror = () => { btn.textContent = '▶'; };
   document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
-  speechSynthesis.speak(asmaUtterance);
   btn.textContent = '⏸';
+  universalSpeak(text, lang, () => { btn.textContent = '▶'; });
 }
 
 // ---------------- Stories of the Prophets (symbolic art only — no depictions) ----------------
@@ -2159,15 +2171,17 @@ function openProphet(i){
   document.getElementById('prophetsGrid').style.display = 'none';
   const detail = document.getElementById('prophetDetail');
   detail.style.display = 'block';
+  const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent('story of prophet ' + p.name.replace(' ﷺ','') + ' islamic lecture')}`;
   document.getElementById('prophetDetailContent').innerHTML = `
-    <div class="prophet-icon-lg">${p.icon}</div>
+    <div class="prophet-icon-lg prophet-icon-xl">${p.icon}</div>
     <div style="text-align:center; margin-bottom:18px;">
-      <div class="hero-name" style="font-size:24px;">${p.name} <span style="color:var(--muted); font-size:18px;">— ${p.ar}</span></div>
-      <div class="prayer-time" style="margin-top:4px;">${p.title}</div>
+      <div class="hero-name" style="font-size:28px;">${p.name} <span style="color:var(--muted); font-size:19px;">— ${p.ar}</span></div>
+      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${p.title}</div>
     </div>
     <div class="ayah-block">
       <div class="prophet-story-text" id="prophetStoryText">${p.story}</div>
       <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+      <a href="${ytUrl}" target="_blank" rel="noopener" class="mushaf-nav-btn" style="display:block; text-align:center; margin-top:10px; text-decoration:none;">🎬 Watch related videos on YouTube</a>
     </div>
   `;
   window.scrollTo(0,0);
@@ -2181,19 +2195,15 @@ function closeProphetDetail(){
 
 function toggleProphetSpeech(i){
   const btn = document.getElementById('prophetPlayBtn');
-  if(!('speechSynthesis' in window)){ alert("Voice reading isn't supported on this browser."); return; }
-  if(speechSynthesis.speaking){ stopProphetSpeech(); return; }
+  if(isTtsPlaying()){ stopProphetSpeech(); return; }
   const p = PROPHETS[i];
-  prophetUtterance = new SpeechSynthesisUtterance(`The story of ${p.name}. ${p.story}`);
-  prophetUtterance.lang = 'en-US';
-  prophetUtterance.rate = 0.95;
-  prophetUtterance.onend = () => { btn.textContent = '▶ Listen to the story'; };
-  prophetUtterance.onerror = () => { btn.textContent = '▶ Listen to the story'; };
-  speechSynthesis.speak(prophetUtterance);
   btn.textContent = '⏸ Stop';
+  universalSpeak(`The story of ${p.name}. ${p.story}`, 'en-US', () => {
+    btn.textContent = '▶ Listen to the story';
+  });
 }
 function stopProphetSpeech(){
-  if('speechSynthesis' in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  universalStop();
   const btn = document.getElementById('prophetPlayBtn');
   if(btn) btn.textContent = '▶ Listen to the story';
 }
@@ -2554,6 +2564,40 @@ function stopAzan(){
   a.pause(); a.currentTime = 0;
   document.getElementById('azanBanner').style.display = 'none';
 }
+// ---------------- Universal voice-over (native TTS on the app, browser TTS on the website) ----------------
+let ttsPlaying = false;
+async function universalSpeak(text, lang, onDone){
+  ttsPlaying = true;
+  if(window.Capacitor && Capacitor.isNativePlatform()){
+    try{
+      const { TextToSpeech } = Capacitor.Plugins;
+      await TextToSpeech.speak({ text, lang: lang || 'en-US', rate: 0.9, pitch: 1.0, volume: 1.0, category: 'ambient' });
+    }catch(e){ console.error('native TTS failed', e); }
+    ttsPlaying = false;
+    if(onDone) onDone();
+    return;
+  }
+  if(!('speechSynthesis' in window)){ ttsPlaying = false; if(onDone) onDone(); return; }
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = lang || 'en-US';
+  utt.rate = 0.9;
+  utt.onend = () => { ttsPlaying = false; if(onDone) onDone(); };
+  utt.onerror = () => { ttsPlaying = false; if(onDone) onDone(); };
+  speechSynthesis.speak(utt);
+}
+async function universalStop(){
+  ttsPlaying = false;
+  if(window.Capacitor && Capacitor.isNativePlatform()){
+    try{ const { TextToSpeech } = Capacitor.Plugins; await TextToSpeech.stop(); }catch(e){}
+  } else if('speechSynthesis' in window && speechSynthesis.speaking){
+    speechSynthesis.cancel();
+  }
+}
+function isTtsPlaying(){
+  if(window.Capacitor && Capacitor.isNativePlatform()) return ttsPlaying;
+  return ('speechSynthesis' in window) && speechSynthesis.speaking;
+}
+
 async function scheduleNativeAzanNotifications(){
   if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
   const { LocalNotifications } = Capacitor.Plugins;
@@ -2573,6 +2617,31 @@ async function scheduleNativeAzanNotifications(){
     await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
     await LocalNotifications.schedule({ notifications });
   }catch(e){ console.error('native azan schedule failed', e); }
+}
+
+async function scheduleDailyStoryNotification(){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  const { LocalNotifications } = Capacitor.Plugins;
+  try{
+    const perm = await LocalNotifications.requestPermissions();
+    if(perm.display !== 'granted') return;
+    await LocalNotifications.createChannel({
+      id: 'story-channel', name: 'Daily Story', importance: 3, visibility: 1
+    });
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+    const p = PROPHETS[dayOfYear % PROPHETS.length];
+    const now = new Date();
+    const fireAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0); // 9:00 AM daily
+    if(fireAt < now) fireAt.setDate(fireAt.getDate() + 1);
+    await LocalNotifications.cancel({ notifications: [{ id: 100 }] });
+    await LocalNotifications.schedule({ notifications: [{
+      id: 100,
+      title: `📖 Today's Story: ${p.name}`,
+      body: `${p.title} — tap to read and listen`,
+      schedule: { at: fireAt, every: 'day' },
+      channelId: 'story-channel'
+    }] });
+  }catch(e){ console.error('daily story schedule failed', e); }
 }
 
 // ================= DUA AI =================
