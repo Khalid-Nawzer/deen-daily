@@ -2,5 +2,8 @@
   functions = "netlify/functions"
   publish = "."
 
+[build.environment]
+  NPM_FLAGS = "--legacy-peer-deps"
+
 [functions]
   node_bundler = "esbuild"
