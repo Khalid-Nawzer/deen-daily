@@ -227,18 +227,6 @@
   }
   .banner.show{transform:translateX(-50%) translateY(0);}
 
-  /* ---------- floating AI assistant bubble ---------- */
-  .ai-fab{
-    position:fixed; right:16px; bottom:calc(84px + env(safe-area-inset-bottom)); z-index:95;
-    width:54px; height:54px; border-radius:50%; border:none;
-    background:linear-gradient(135deg,var(--gold),#B98F2A); color:#151005;
-    display:flex; align-items:center; justify-content:center; font-size:24px;
-    box-shadow:0 10px 26px rgba(212,175,55,.45), 0 0 0 1px rgba(255,255,255,.15) inset;
-  }
-  .ai-fab svg{width:24px; height:24px;}
-  .ai-fab-ring{position:absolute; inset:-4px; border-radius:50%; border:2px solid var(--gold); opacity:.6; animation:aiFabPulse 2.2s infinite;}
-  @keyframes aiFabPulse{0%{transform:scale(.85); opacity:.7;} 100%{transform:scale(1.35); opacity:0;}}
-
   /* ---------- bottom nav ---------- */
   .bottomnav{
     position:fixed; left:12px; right:12px; bottom:calc(10px + env(safe-area-inset-bottom)); z-index:90;
@@ -712,19 +700,15 @@
   </div>
 
   <div class="setting-row" style="display:block;">
-    <div><div class="setting-lbl">✨ Dua AI</div><div class="setting-sub">Works out of the box — no key needed. The two options below are only for adding your own personal key if you ever want extra/faster quota.</div></div>
-  </div>
-
-  <div class="setting-row" style="display:block;">
-    <div><div class="setting-lbl">Claude AI key (optional)</div><div class="setting-sub">Use your own Claude key instead of the built-in free AI, for higher-quality open-ended answers.</div></div>
+    <div><div class="setting-lbl">✨ Claude AI key</div><div class="setting-sub">Powers open-ended answers in the Dua AI tab. Common situations (travel, exams, sickness…) work instantly without a key.</div></div>
     <div class="ai-key-box">
       <input type="password" id="aiKeyInput" placeholder="sk-ant-...">
     </div>
-    <div class="ai-key-note">Stored only in this browser (localStorage) — never sent anywhere except directly to Anthropic's API.</div>
+    <div class="ai-key-note">Stored only in this browser (localStorage) — never sent anywhere except directly to Anthropic's API. For a public production site, proxy this through a small backend/Cloudflare Worker instead of shipping the key in client code, so visitors can't see or misuse it.</div>
   </div>
 
   <div class="setting-row" style="display:block;">
-    <div><div class="setting-lbl">Gemini AI key (optional)</div><div class="setting-sub">Use your own free Gemini key instead of the app's shared one, if you ever hit a "busy" message during peak times.</div></div>
+    <div><div class="setting-lbl">🆓 Gemini AI key (free)</div><div class="setting-sub">Free alternative to the Claude key above — uses Google's free Gemini tier to answer anything, always picking from real authentic duas.</div></div>
     <div class="ai-key-box">
       <input type="password" id="geminiKeyInput" placeholder="AIza...">
     </div>
@@ -825,18 +809,6 @@
     <button class="radio-play-btn" id="radioPlayBtn" onclick="toggleIslamicRadio()">▶</button>
   </div>
   <audio id="islamicRadioAudio" preload="none"></audio>
-
-  <div class="section-title">Islamic Calendar</div>
-  <div class="prophet-feature-card" onclick="goPage('calendar')">
-    <div class="prophet-feature-icons">
-      <svg viewBox="0 0 100 100" stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="20" width="72" height="66" rx="8"/><path d="M14 40 H86 M30 12 V26 M70 12 V26"/><circle cx="50" cy="60" r="10"/></svg>
-    </div>
-    <div class="prophet-feature-text">
-      <div class="prophet-feature-title" id="homeHijriDate">Loading Hijri date…</div>
-      <div class="prophet-feature-sub">Today's date · this month · upcoming occasions</div>
-    </div>
-    <div class="prophet-feature-arrow">→</div>
-  </div>
 
   <div class="section-title">Stories of the Prophets</div>
   <div class="prophet-feature-card" onclick="goPage('prophets')">
@@ -979,11 +951,6 @@
   </div>
 </div>
 
-<div id="page-calendar" class="page">
-  <div class="section-title">Islamic Calendar</div>
-  <div id="calendarContent"><div class="loading-txt"><div class="spinner"></div>Loading Hijri date…</div></div>
-</div>
-
 <div id="page-more" class="page">
   <div class="section-title">More</div>
   <div class="feature-grid">
@@ -1003,11 +970,6 @@
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7a4 4 0 0 0-4-4H2v18h6a4 4 0 0 1 4 4"/><path d="M12 21V7a4 4 0 0 1 4-4h6v18h-6a4 4 0 0 0-4 4"/></svg></div>
       <div class="feature-tile-lbl">Prophet Stories</div>
     </div>
-    <div class="feature-tile" onclick="goPage('calendar')">
-      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
-      <div class="feature-tile-lbl">Islamic Calendar</div>
-    </div>
-
     <div class="feature-tile" onclick="openNotesSheet()">
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <div class="feature-tile-lbl">My Notes</div>
@@ -1018,11 +980,6 @@
     </div>
   </div>
 </div>
-
-<button class="ai-fab" id="aiFab" onclick="goPage('ai')" aria-label="Ask Dua AI">
-  <span class="ai-fab-ring"></span>
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.9 4.9L19 9.8l-4.9 1.9L12 17l-1.9-5.3L5 9.8l5-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>
-</button>
 
 </main>
 
@@ -1078,47 +1035,6 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 const AI_MODEL = "claude-sonnet-5";
 let AI_KEY = localStorage.getItem('deen_ai_key') || '';
 let GEMINI_KEY = localStorage.getItem('deen_gemini_key') || '';
-
-// The deployed site — used as an absolute base so the AI proxy call also
-// works from inside the packaged native app (which runs from a local
-// bundle, not this origin), same pattern as the azan-cron pings.
-const DEEN_SITE_ORIGIN = 'https://clever-bunny-6ef61e.netlify.app';
-function apiBase(){
-  try{
-    if(window.Capacitor && Capacitor.isNativePlatform()) return DEEN_SITE_ORIGIN;
-  }catch(e){}
-  return ''; // relative — same origin when running on the website/PWA
-}
-
-// Built-in AI, no per-user key needed: goes through our own Netlify function
-// (netlify/functions/ai.js), which holds the real Gemini key server-side.
-// Falls back to a personal Gemini/Claude key from Settings if the person
-// added one (kept for anyone who wants their own quota).
-async function callAi(prompt){
-  const res = await fetch(apiBase() + '/.netlify/functions/ai', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ prompt })
-  });
-  const data = await res.json().catch(() => ({}));
-  if(!res.ok) throw new Error(data.error || ('AI ' + res.status));
-  return data.text || '';
-}
-// Direct call using a personal Gemini key from Settings (only used if the
-// person chose to add their own, e.g. for extra quota beyond the shared one).
-async function askGeminiRaw(prompt){
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
-  if(!res.ok){
-    const errText = await res.text().catch(()=> '');
-    throw new Error('Gemini ' + res.status + (errText ? ': '+errText.slice(0,120) : ''));
-  }
-  const data = await res.json();
-  return (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
-}
 
 const PRAYERS = [
   {id:'fajr', name:'Fajr', time:'—', apiKey:'Fajr', ico:'🌅'},
@@ -1837,11 +1753,9 @@ function goPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
-  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','more'];
+  const moreSubPages = ['adhkar','hadith','asma','prophets','more'];
   const navTarget = moreSubPages.includes(name) ? 'more' : name;
   document.getElementById('nav-'+navTarget)?.classList.add('active');
-  const fab = document.getElementById('aiFab');
-  if(fab) fab.style.display = (name === 'ai') ? 'none' : 'flex';
   window.scrollTo(0,0);
   if(name === 'adhkar' && !adhkarRendered){ renderAdhkar(); }
   if(name === 'quran' && !quranListLoaded){ loadSurahList(); }
@@ -1849,7 +1763,6 @@ function goPage(name){
   if(name === 'ai' && !aiChipsRendered){ renderChips(); }
   if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
   if(name === 'prophets' && !prophetsRendered){ renderProphets(); }
-  if(name === 'calendar' && !calendarRendered){ renderCalendar(); }
 }
 
 // ---------------- Adhkar & Duas library ----------------
@@ -2173,11 +2086,22 @@ function renderAsmaList(){
 
 async function fetchAsmaTamil(){
   const el = document.getElementById('asmaGrid');
+  if(!GEMINI_KEY){
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Add a free Gemini API key in Settings (⚙️) to unlock Tamil translations — see the Dua AI section note for how to get one free. Once added, come back here.</div>`;
+    return;
+  }
   el.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Translating into Tamil (one-time, then saved)…</div>`;
   try{
     const namesList = ASMA_UL_HUSNA.map((n,i) => `${i+1}. ${n.tr} — ${n.en}`).join('\n');
     const prompt = `Translate the meaning (not the Arabic name itself) of each of these 99 names of Allah into clear, natural Tamil. Reply with ONLY a JSON array of exactly 99 Tamil strings, in the same order, no markdown, no extra text:\n${namesList}`;
-    let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    });
+    if(!res.ok) throw new Error('Gemini ' + res.status);
+    const data = await res.json();
+    let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
     raw = raw.replace(/^```json\s*|```$/g, '').trim();
     const arr = JSON.parse(raw);
     if(!Array.isArray(arr) || arr.length !== 99) throw new Error('unexpected response shape');
@@ -2185,7 +2109,7 @@ async function fetchAsmaTamil(){
     localStorage.setItem('deen_asma_tamil', JSON.stringify(arr));
     renderAsmaList();
   }catch(e){
-    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch Tamil translations right now (${e.message || 'error'}). Try this tab again in a moment.</div>`;
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch Tamil translations right now (${e.message || 'error'}). Check your Gemini key in Settings and try this tab again.</div>`;
   }
 }
 
@@ -2263,18 +2187,6 @@ const PROPHETS = [
 ];
 let prophetsRendered = false;
 let prophetUtterance = null;
-let currentProphetIndex = 0;
-let prophetLang = 'en'; // 'en' | 'ta' | 'si'
-const PROPHET_LANG_META = {
-  en: { voice:'en-US', label:'English', flag:'🌍' },
-  ta: { voice:'ta-IN', label:'Tamil',   flag:'🇱🇰' },
-  si: { voice:'si-LK', label:'Sinhala', flag:'🇱🇰' }
-};
-// Cached AI translations: each is an array of 15 {title, story} objects, same order as PROPHETS
-let prophetTranslations = {
-  ta: JSON.parse(localStorage.getItem('deen_prophet_ta') || 'null'),
-  si: JSON.parse(localStorage.getItem('deen_prophet_si') || 'null')
-};
 
 function renderProphets(){
   const el = document.getElementById('prophetsGrid');
@@ -2294,96 +2206,24 @@ function renderProphets(){
 }
 
 function openProphet(i){
-  currentProphetIndex = i;
-  document.getElementById('prophetsGrid').style.display = 'none';
-  document.getElementById('prophetDetail').style.display = 'block';
-  renderProphetDetail();
-  window.scrollTo(0,0);
-}
-
-function getProphetTitle(i){
-  if(prophetLang === 'en') return PROPHETS[i].title;
-  const arr = prophetTranslations[prophetLang];
-  return (arr && arr[i] && arr[i].title) || PROPHETS[i].title;
-}
-function getProphetStory(i){
-  if(prophetLang === 'en') return PROPHETS[i].story;
-  const arr = prophetTranslations[prophetLang];
-  return (arr && arr[i] && arr[i].story) || PROPHETS[i].story;
-}
-function hasProphetTranslation(lang){
-  return lang === 'en' || !!prophetTranslations[lang];
-}
-
-function renderProphetDetail(status){
-  const i = currentProphetIndex;
   const p = PROPHETS[i];
+  document.getElementById('prophetsGrid').style.display = 'none';
+  const detail = document.getElementById('prophetDetail');
+  detail.style.display = 'block';
   const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent('story of prophet ' + p.name.replace(' ﷺ','') + ' islamic lecture')}`;
-
-  const tabsHtml = `
-    <div class="qtabs" style="margin-bottom:14px;">
-      ${Object.keys(PROPHET_LANG_META).map(lang => `
-        <button class="qtab ${prophetLang===lang?'active':''}" onclick="switchProphetLang('${lang}')">${PROPHET_LANG_META[lang].flag} ${PROPHET_LANG_META[lang].label}</button>
-      `).join('')}
-    </div>
-  `;
-
-  let bodyHtml;
-  if(status === 'loading'){
-    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">✨ Translating this story into ${PROPHET_LANG_META[prophetLang].label}…</div>`;
-  } else if(status){
-    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch the ${PROPHET_LANG_META[prophetLang].label} translation right now (${status}). Try this tab again.</div>`;
-  } else if(prophetLang !== 'en' && !hasProphetTranslation(prophetLang)){
-    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">One moment — fetching this translation…</div>`;
-  } else {
-    bodyHtml = `
-      <div class="prophet-story-text" id="prophetStoryText">${getProphetStory(i)}</div>
-      ${prophetLang !== 'en' ? `<div class="dhikr-meaning" style="margin-top:10px;">✨ AI-assisted translation — please verify with a native speaker for precise wording.</div>` : ''}
-      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
-    `;
-  }
-
   document.getElementById('prophetDetailContent').innerHTML = `
     <div class="prophet-icon-lg prophet-icon-xl">${p.icon}</div>
     <div style="text-align:center; margin-bottom:18px;">
       <div class="hero-name" style="font-size:28px;">${p.name} <span style="color:var(--muted); font-size:19px;">— ${p.ar}</span></div>
-      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${getProphetTitle(i)}</div>
+      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${p.title}</div>
     </div>
-    ${tabsHtml}
     <div class="ayah-block">
-      ${bodyHtml}
+      <div class="prophet-story-text" id="prophetStoryText">${p.story}</div>
+      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
       <a href="${ytUrl}" target="_blank" rel="noopener" class="mushaf-nav-btn" style="display:block; text-align:center; margin-top:10px; text-decoration:none;">🎬 Watch related videos on YouTube</a>
     </div>
   `;
-}
-
-function switchProphetLang(lang){
-  stopProphetSpeech();
-  prophetLang = lang;
-  if(lang !== 'en' && !hasProphetTranslation(lang)){
-    fetchProphetTranslations(lang);
-    return;
-  }
-  renderProphetDetail();
-}
-
-async function fetchProphetTranslations(lang){
-  renderProphetDetail('loading');
-  const langName = PROPHET_LANG_META[lang].label;
-  const prompt = `Translate the following 15 short Islamic prophet story titles and stories from English into natural, respectful, everyday-reader ${langName}. Keep Islamic proper nouns (Allah, prophet names, place names) as commonly transliterated in ${langName}. Return ONLY a JSON array of 15 objects in the exact same order as given, each with keys "title" and "story" — no markdown, no commentary, no extra text.
-
-${JSON.stringify(PROPHETS.map(p => ({ name:p.name, title:p.title, story:p.story })))}`;
-  try{
-    let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
-    raw = raw.replace(/^```json\s*|```$/g, '').trim();
-    const arr = JSON.parse(raw);
-    if(!Array.isArray(arr) || arr.length !== PROPHETS.length) throw new Error('unexpected response shape');
-    prophetTranslations[lang] = arr;
-    localStorage.setItem('deen_prophet_' + lang, JSON.stringify(arr));
-    renderProphetDetail();
-  }catch(e){
-    renderProphetDetail(e.message || 'error');
-  }
+  window.scrollTo(0,0);
 }
 
 function closeProphetDetail(){
@@ -2395,12 +2235,9 @@ function closeProphetDetail(){
 function toggleProphetSpeech(i){
   const btn = document.getElementById('prophetPlayBtn');
   if(isTtsPlaying()){ stopProphetSpeech(); return; }
-  const meta = PROPHET_LANG_META[prophetLang];
-  const text = prophetLang === 'en'
-    ? `The story of ${PROPHETS[i].name}. ${getProphetStory(i)}`
-    : `${getProphetTitle(i)}. ${getProphetStory(i)}`;
+  const p = PROPHETS[i];
   btn.textContent = '⏸ Stop';
-  universalSpeak(text, meta.voice, () => {
+  universalSpeak(`The story of ${p.name}. ${p.story}`, 'en-US', () => {
     btn.textContent = '▶ Listen to the story';
   });
 }
@@ -2409,149 +2246,6 @@ function stopProphetSpeech(){
   const btn = document.getElementById('prophetPlayBtn');
   if(btn) btn.textContent = '▶ Listen to the story';
 }
-
-// ---------------- Islamic (Hijri) Calendar ----------------
-let calendarRendered = false;
-let hijriTodayCache = JSON.parse(localStorage.getItem('deen_hijri_today') || 'null'); // {key, data}
-let hijriMonthCache = JSON.parse(localStorage.getItem('deen_hijri_month') || 'null'); // {key, days}
-let hijriOccasionsCache = JSON.parse(localStorage.getItem('deen_hijri_occasions') || 'null'); // {hijriYear, list}
-
-// Fixed Hijri (month, day) pairs for the occasions most Muslims track day-to-day.
-// Sect-specific dates (e.g. exact moonsighting-based start of Ramadan/Eid) can
-// shift by a day in real life — this gives the standard calculated date.
-const ISLAMIC_OCCASIONS = [
-  { name:'Islamic New Year', icon:'🌙', hMonth:1, hDay:1 },
-  { name:'Day of Ashura', icon:'🤲', hMonth:1, hDay:10 },
-  { name:"Mawlid al-Nabi ﷺ", icon:'✨', hMonth:3, hDay:12 },
-  { name:'Start of Ramadan', icon:'🌒', hMonth:9, hDay:1 },
-  { name:"Laylatul Qadr (est.)", icon:'📿', hMonth:9, hDay:27 },
-  { name:'Eid al-Fitr', icon:'🎉', hMonth:10, hDay:1 },
-  { name:'Day of Arafah', icon:'⛰️', hMonth:12, hDay:9 },
-  { name:'Eid al-Adha', icon:'🕌', hMonth:12, hDay:10 }
-];
-
-function ddmmyyyy(y,m,d){ return `${String(d).padStart(2,'0')}-${String(m).padStart(2,'0')}-${y}`; }
-
-async function fetchHijriToday(){
-  const p = getSLParts();
-  const key = `${p.year}-${p.month}-${p.day}`;
-  if(hijriTodayCache && hijriTodayCache.key === key) return hijriTodayCache.data;
-  const res = await fetch(`https://api.aladhan.com/v1/gToH?date=${ddmmyyyy(p.year, p.month, p.day)}`);
-  if(!res.ok) throw new Error('Hijri lookup ' + res.status);
-  const json = await res.json();
-  const data = json.data;
-  hijriTodayCache = { key, data };
-  localStorage.setItem('deen_hijri_today', JSON.stringify(hijriTodayCache));
-  return data;
-}
-
-async function fetchHijriMonth(){
-  const p = getSLParts();
-  const key = `${p.year}-${p.month}`;
-  if(hijriMonthCache && hijriMonthCache.key === key) return hijriMonthCache.days;
-  const res = await fetch(`https://api.aladhan.com/v1/gToHCalendar/${Number(p.month)}/${p.year}`);
-  if(!res.ok) throw new Error('Hijri calendar ' + res.status);
-  const json = await res.json();
-  const days = json.data || [];
-  hijriMonthCache = { key, days };
-  localStorage.setItem('deen_hijri_month', JSON.stringify(hijriMonthCache));
-  return days;
-}
-
-async function fetchIslamicOccasions(hijriYear){
-  if(hijriOccasionsCache && hijriOccasionsCache.hijriYear === hijriYear) return hijriOccasionsCache.list;
-  const p = getSLParts();
-  const todayStr = `${p.year}-${p.month}-${p.day}`;
-  const list = [];
-  for(const occ of ISLAMIC_OCCASIONS){
-    let year = hijriYear;
-    let gDate = await hijriToGregorian(occ.hDay, occ.hMonth, year);
-    // if it already passed this Hijri year, show next year's occurrence instead
-    if(gDate && gDate.iso < todayStr){
-      year = hijriYear + 1;
-      gDate = await hijriToGregorian(occ.hDay, occ.hMonth, year);
-    }
-    if(gDate) list.push({ ...occ, hijriYear: year, ...gDate });
-  }
-  list.sort((a,b) => a.iso.localeCompare(b.iso));
-  hijriOccasionsCache = { hijriYear, list };
-  localStorage.setItem('deen_hijri_occasions', JSON.stringify(hijriOccasionsCache));
-  return list;
-}
-
-async function hijriToGregorian(day, month, year){
-  try{
-    const res = await fetch(`https://api.aladhan.com/v1/hToG?date=${ddmmyyyy(year, month, day)}`);
-    if(!res.ok) return null;
-    const json = await res.json();
-    const g = json.data.gregorian; // { date:"DD-MM-YYYY", weekday:{en}, month:{en}, year, ... }
-    const [dd,mm,yyyy] = g.date.split('-');
-    return { iso: `${yyyy}-${mm}-${dd}`, display: `${Number(dd)} ${g.month.en} ${yyyy}` };
-  }catch(e){ return null; }
-}
-
-async function updateHomeHijriPreview(){
-  try{
-    const h = await fetchHijriToday();
-    const el = document.getElementById('homeHijriDate');
-    if(el) el.textContent = `${h.hijri.day} ${h.hijri.month.en} ${h.hijri.year} AH`;
-  }catch(e){
-    const el = document.getElementById('homeHijriDate');
-    if(el) el.textContent = 'Islamic Calendar';
-  }
-}
-
-async function renderCalendar(){
-  calendarRendered = true;
-  const el = document.getElementById('calendarContent');
-  el.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Loading Hijri date…</div>`;
-  try{
-    const [today, monthDays, ] = await Promise.all([ fetchHijriToday(), fetchHijriMonth() ]);
-    const occasions = await fetchIslamicOccasions(Number(today.hijri.year));
-    const p = getSLParts();
-    const todayIso = `${p.year}-${p.month}-${p.day}`;
-
-    el.innerHTML = `
-      <div class="ayah-block" style="text-align:center; margin-bottom:18px;">
-        <div style="font-size:13px; color:var(--muted); margin-bottom:4px;">${today.hijri.weekday.en} · Today</div>
-        <div class="hero-name" style="font-size:30px;">${today.hijri.day} ${today.hijri.month.en} <span style="color:var(--muted); font-size:20px;">${today.hijri.year} AH</span></div>
-        <div class="prayer-time" style="margin-top:6px; font-size:14px;">${today.hijri.month.ar} · Gregorian: ${today.gregorian.day} ${today.gregorian.month.en} ${today.gregorian.year}</div>
-      </div>
-
-      <div class="section-title">Upcoming Occasions</div>
-      <div style="margin-bottom:18px;">
-        ${occasions.map(o => `
-          <div class="surah-row">
-            <div class="prophet-icon" style="font-size:22px; display:flex; align-items:center; justify-content:center;">${o.icon}</div>
-            <div class="surah-info">
-              <div class="surah-name">${o.name}</div>
-              <div class="surah-sub">${o.hDay} ${today.hijri.month.number === o.hMonth ? today.hijri.month.en : ''} ${o.hijriYear} AH · ${o.display}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-
-      <div class="section-title">This Month (${today.gregorian.month.en} ${today.gregorian.year})</div>
-      <div>
-        ${monthDays.map(d => {
-          const iso = `${d.gregorian.year}-${d.gregorian.month.number.toString().padStart(2,'0')}-${d.gregorian.day.toString().padStart(2,'0')}`;
-          const isToday = iso === todayIso;
-          return `
-          <div class="surah-row" style="${isToday ? 'background:var(--gold-dim); border-radius:12px;' : ''}">
-            <div class="surah-num" style="${isToday ? 'background:var(--gold); color:#151005;' : ''}">${d.gregorian.day}</div>
-            <div class="surah-info">
-              <div class="surah-name">${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH${isToday ? ' · Today' : ''}</div>
-              <div class="surah-sub">${d.gregorian.weekday.en}, ${d.gregorian.month.en} ${d.gregorian.day}</div>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    `;
-  }catch(e){
-    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't load the Hijri calendar right now (${e.message || 'network error'}). Pull down to check your connection and try again.</div>`;
-  }
-}
-
 
 // ---------------- Quran (Arabic) & Translation (English) ----------------
 let SURAHS = [];
@@ -3194,8 +2888,11 @@ async function sendChat(){
     return;
   }
 
-  // no local match — use the built-in AI (works out of the box), or the
-  // person's own Claude key from Settings if they added one for extra quota
+  // no local match — fall back to Claude, then free Gemini, then give up gracefully
+  if(!AI_KEY && !GEMINI_KEY){
+    addBotMessage(`I don't have that one memorized yet 🤲 Try a chip above, or add a free Gemini key (or Claude key) in Settings (⚙️) to unlock answers for anything.`, {plain:true});
+    return;
+  }
   addTyping();
   try{
     const reply = AI_KEY ? await askClaude(text) : await askGemini(text);
@@ -3203,7 +2900,7 @@ async function sendChat(){
     addBotMessage(`${reply}<div class="dua-note">✨ AI-assisted match — for religious rulings, please verify with a qualified scholar.</div>`);
   }catch(e){
     removeTyping();
-    addBotMessage(`Couldn't reach the AI right now (${e.message || 'network error'}). Try again in a moment, or try one of the quick topics above.`, {plain:true});
+    addBotMessage(`Couldn't reach the AI right now (${e.message || 'network error'}). Check your API key in Settings, or try one of the quick topics above.`, {plain:true});
   }
 }
 
@@ -3219,7 +2916,17 @@ ${refList}
 Pick the single closest-matching dua by its number. Reply with ONLY this exact JSON, no markdown, no code fences, no extra text:
 {"index": <number or -1 if truly nothing fits>, "note": "<one warm sentence on why this dua fits, or if index is -1, a brief compassionate general Islamic reflection on their situation with no invented Arabic text>"}`;
 
-  let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error('Gemini ' + res.status + (errText ? ': '+errText.slice(0,120) : ''));
+  }
+  const data = await res.json();
+  let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
   raw = raw.replace(/^```json\s*|```$/g, '').trim();
   let parsed;
   try{ parsed = JSON.parse(raw); }catch(e){ throw new Error('unexpected AI response'); }
@@ -3359,7 +3066,6 @@ async function startQibla(){
 
 // init
 fetchPrayerTimes();
-updateHomeHijriPreview();
 updateToggles();
 
 if('serviceWorker' in navigator){
