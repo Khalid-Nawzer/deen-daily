@@ -700,15 +700,19 @@
   </div>
 
   <div class="setting-row" style="display:block;">
-    <div><div class="setting-lbl">✨ Claude AI key</div><div class="setting-sub">Powers open-ended answers in the Dua AI tab. Common situations (travel, exams, sickness…) work instantly without a key.</div></div>
-    <div class="ai-key-box">
-      <input type="password" id="aiKeyInput" placeholder="sk-ant-...">
-    </div>
-    <div class="ai-key-note">Stored only in this browser (localStorage) — never sent anywhere except directly to Anthropic's API. For a public production site, proxy this through a small backend/Cloudflare Worker instead of shipping the key in client code, so visitors can't see or misuse it.</div>
+    <div><div class="setting-lbl">✨ Dua AI</div><div class="setting-sub">Works out of the box — no key needed. The two options below are only for adding your own personal key if you ever want extra/faster quota.</div></div>
   </div>
 
   <div class="setting-row" style="display:block;">
-    <div><div class="setting-lbl">🆓 Gemini AI key (free)</div><div class="setting-sub">Free alternative to the Claude key above — uses Google's free Gemini tier to answer anything, always picking from real authentic duas.</div></div>
+    <div><div class="setting-lbl">Claude AI key (optional)</div><div class="setting-sub">Use your own Claude key instead of the built-in free AI, for higher-quality open-ended answers.</div></div>
+    <div class="ai-key-box">
+      <input type="password" id="aiKeyInput" placeholder="sk-ant-...">
+    </div>
+    <div class="ai-key-note">Stored only in this browser (localStorage) — never sent anywhere except directly to Anthropic's API.</div>
+  </div>
+
+  <div class="setting-row" style="display:block;">
+    <div><div class="setting-lbl">Gemini AI key (optional)</div><div class="setting-sub">Use your own free Gemini key instead of the app's shared one, if you ever hit a "busy" message during peak times.</div></div>
     <div class="ai-key-box">
       <input type="password" id="geminiKeyInput" placeholder="AIza...">
     </div>
@@ -782,6 +786,9 @@
 
   <div id="missedBox"></div>
 
+  <div class="section-title">Today's Feed</div>
+  <div id="homeFeed"></div>
+
   <div class="section-title">Today's Prayers</div>
   <div id="prayerList"></div>
 
@@ -809,6 +816,18 @@
     <button class="radio-play-btn" id="radioPlayBtn" onclick="toggleIslamicRadio()">▶</button>
   </div>
   <audio id="islamicRadioAudio" preload="none"></audio>
+
+  <div class="section-title">Islamic Calendar</div>
+  <div class="prophet-feature-card" onclick="goPage('calendar')">
+    <div class="prophet-feature-icons">
+      <svg viewBox="0 0 100 100" stroke="#D4AF37" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"><rect x="14" y="20" width="72" height="66" rx="8"/><path d="M14 40 H86 M30 12 V26 M70 12 V26"/><circle cx="50" cy="60" r="10"/></svg>
+    </div>
+    <div class="prophet-feature-text">
+      <div class="prophet-feature-title" id="homeHijriDate">Loading Hijri date…</div>
+      <div class="prophet-feature-sub">Today's date · this month · upcoming occasions</div>
+    </div>
+    <div class="prophet-feature-arrow">→</div>
+  </div>
 
   <div class="section-title">Stories of the Prophets</div>
   <div class="prophet-feature-card" onclick="goPage('prophets')">
@@ -854,8 +873,18 @@
     <button class="qtab active" id="qtab-arabic" onclick="switchQtab('arabic')">📖 Arabic</button>
     <button class="qtab" id="qtab-translation" onclick="switchQtab('translation')">🌍 English Meaning</button>
   </div>
+  <div class="qtabs" id="quranModeTabs" style="margin-top:8px;">
+    <button class="qtab active" data-mode="surah" onclick="switchQuranMode('surah')">📖 Surah</button>
+    <button class="qtab" data-mode="juz" onclick="switchQuranMode('juz')">📑 Juz</button>
+    <button class="qtab" data-mode="page" onclick="switchQuranMode('page')">📄 Page</button>
+    <button class="qtab" data-mode="topic" onclick="switchQuranMode('topic')">🏷️ Topic</button>
+    <button class="qtab" data-mode="fav" onclick="switchQuranMode('fav')">⭐ Favorites</button>
+  </div>
   <input id="surahSearch" placeholder="Search a surah…" oninput="filterSurahs(this.value)">
   <div id="quranSurahList"></div>
+  <div id="quranJuzList" style="display:none;"></div>
+  <div id="quranTopicList" style="display:none;"></div>
+  <div id="quranTopicDetail" style="display:none;"></div>
   <div id="quranReader" style="display:none;"></div>
   <div id="mushafView" style="display:none;">
     <div class="mushaf-topbar">
@@ -951,6 +980,20 @@
   </div>
 </div>
 
+<div id="page-calendar" class="page">
+  <div class="section-title">Islamic Calendar</div>
+  <div id="calendarContent"><div class="loading-txt"><div class="spinner"></div>Loading Hijri date…</div></div>
+</div>
+
+<div id="page-mosques" class="page">
+  <div class="section-title">Nearby Mosques</div>
+  <div id="mosquesContent">
+    <div class="dhikr-meaning" style="margin-bottom:14px;">Uses your device location + OpenStreetMap to find mosques near you — free, no account needed.</div>
+    <button class="mushaf-play-btn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700;" onclick="findNearbyMosques()">📍 Find Mosques Near Me</button>
+    <div id="mosquesList"></div>
+  </div>
+</div>
+
 <div id="page-more" class="page">
   <div class="section-title">More</div>
   <div class="feature-grid">
@@ -970,6 +1013,15 @@
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21V7a4 4 0 0 0-4-4H2v18h6a4 4 0 0 1 4 4"/><path d="M12 21V7a4 4 0 0 1 4-4h6v18h-6a4 4 0 0 0-4 4"/></svg></div>
       <div class="feature-tile-lbl">Prophet Stories</div>
     </div>
+    <div class="feature-tile" onclick="goPage('calendar')">
+      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div>
+      <div class="feature-tile-lbl">Islamic Calendar</div>
+    </div>
+    <div class="feature-tile" onclick="goPage('mosques')">
+      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V9l3-2.5L20 9v12"/><path d="M9 21v-5h2v5"/></svg></div>
+      <div class="feature-tile-lbl">Nearby Mosques</div>
+    </div>
+
     <div class="feature-tile" onclick="openNotesSheet()">
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
       <div class="feature-tile-lbl">My Notes</div>
@@ -1035,6 +1087,47 @@ const googleProvider = new firebase.auth.GoogleAuthProvider();
 const AI_MODEL = "claude-sonnet-5";
 let AI_KEY = localStorage.getItem('deen_ai_key') || '';
 let GEMINI_KEY = localStorage.getItem('deen_gemini_key') || '';
+
+// The deployed site — used as an absolute base so the AI proxy call also
+// works from inside the packaged native app (which runs from a local
+// bundle, not this origin), same pattern as the azan-cron pings.
+const DEEN_SITE_ORIGIN = 'https://clever-bunny-6ef61e.netlify.app';
+function apiBase(){
+  try{
+    if(window.Capacitor && Capacitor.isNativePlatform()) return DEEN_SITE_ORIGIN;
+  }catch(e){}
+  return ''; // relative — same origin when running on the website/PWA
+}
+
+// Built-in AI, no per-user key needed: goes through our own Netlify function
+// (netlify/functions/ai.js), which holds the real Gemini key server-side.
+// Falls back to a personal Gemini/Claude key from Settings if the person
+// added one (kept for anyone who wants their own quota).
+async function callAi(prompt){
+  const res = await fetch(apiBase() + '/.netlify/functions/ai', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ prompt })
+  });
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(data.error || ('AI ' + res.status));
+  return data.text || '';
+}
+// Direct call using a personal Gemini key from Settings (only used if the
+// person chose to add their own, e.g. for extra quota beyond the shared one).
+async function askGeminiRaw(prompt){
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+  });
+  if(!res.ok){
+    const errText = await res.text().catch(()=> '');
+    throw new Error('Gemini ' + res.status + (errText ? ': '+errText.slice(0,120) : ''));
+  }
+  const data = await res.json();
+  return (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+}
 
 const PRAYERS = [
   {id:'fajr', name:'Fajr', time:'—', apiKey:'Fajr', ico:'🌅'},
@@ -1753,7 +1846,7 @@ function goPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
-  const moreSubPages = ['adhkar','hadith','asma','prophets','more'];
+  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','mosques','more'];
   const navTarget = moreSubPages.includes(name) ? 'more' : name;
   document.getElementById('nav-'+navTarget)?.classList.add('active');
   window.scrollTo(0,0);
@@ -1763,6 +1856,7 @@ function goPage(name){
   if(name === 'ai' && !aiChipsRendered){ renderChips(); }
   if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
   if(name === 'prophets' && !prophetsRendered){ renderProphets(); }
+  if(name === 'calendar' && !calendarRendered){ renderCalendar(); }
 }
 
 // ---------------- Adhkar & Duas library ----------------
@@ -2086,22 +2180,11 @@ function renderAsmaList(){
 
 async function fetchAsmaTamil(){
   const el = document.getElementById('asmaGrid');
-  if(!GEMINI_KEY){
-    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Add a free Gemini API key in Settings (⚙️) to unlock Tamil translations — see the Dua AI section note for how to get one free. Once added, come back here.</div>`;
-    return;
-  }
   el.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Translating into Tamil (one-time, then saved)…</div>`;
   try{
     const namesList = ASMA_UL_HUSNA.map((n,i) => `${i+1}. ${n.tr} — ${n.en}`).join('\n');
     const prompt = `Translate the meaning (not the Arabic name itself) of each of these 99 names of Allah into clear, natural Tamil. Reply with ONLY a JSON array of exactly 99 Tamil strings, in the same order, no markdown, no extra text:\n${namesList}`;
-    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    });
-    if(!res.ok) throw new Error('Gemini ' + res.status);
-    const data = await res.json();
-    let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+    let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
     raw = raw.replace(/^```json\s*|```$/g, '').trim();
     const arr = JSON.parse(raw);
     if(!Array.isArray(arr) || arr.length !== 99) throw new Error('unexpected response shape');
@@ -2109,7 +2192,7 @@ async function fetchAsmaTamil(){
     localStorage.setItem('deen_asma_tamil', JSON.stringify(arr));
     renderAsmaList();
   }catch(e){
-    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch Tamil translations right now (${e.message || 'error'}). Check your Gemini key in Settings and try this tab again.</div>`;
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch Tamil translations right now (${e.message || 'error'}). Try this tab again in a moment.</div>`;
   }
 }
 
@@ -2187,6 +2270,18 @@ const PROPHETS = [
 ];
 let prophetsRendered = false;
 let prophetUtterance = null;
+let currentProphetIndex = 0;
+let prophetLang = 'en'; // 'en' | 'ta' | 'si'
+const PROPHET_LANG_META = {
+  en: { voice:'en-US', label:'English', flag:'🌍' },
+  ta: { voice:'ta-IN', label:'Tamil',   flag:'🇱🇰' },
+  si: { voice:'si-LK', label:'Sinhala', flag:'🇱🇰' }
+};
+// Cached AI translations: each is an array of 15 {title, story} objects, same order as PROPHETS
+let prophetTranslations = {
+  ta: JSON.parse(localStorage.getItem('deen_prophet_ta') || 'null'),
+  si: JSON.parse(localStorage.getItem('deen_prophet_si') || 'null')
+};
 
 function renderProphets(){
   const el = document.getElementById('prophetsGrid');
@@ -2206,24 +2301,96 @@ function renderProphets(){
 }
 
 function openProphet(i){
-  const p = PROPHETS[i];
+  currentProphetIndex = i;
   document.getElementById('prophetsGrid').style.display = 'none';
-  const detail = document.getElementById('prophetDetail');
-  detail.style.display = 'block';
+  document.getElementById('prophetDetail').style.display = 'block';
+  renderProphetDetail();
+  window.scrollTo(0,0);
+}
+
+function getProphetTitle(i){
+  if(prophetLang === 'en') return PROPHETS[i].title;
+  const arr = prophetTranslations[prophetLang];
+  return (arr && arr[i] && arr[i].title) || PROPHETS[i].title;
+}
+function getProphetStory(i){
+  if(prophetLang === 'en') return PROPHETS[i].story;
+  const arr = prophetTranslations[prophetLang];
+  return (arr && arr[i] && arr[i].story) || PROPHETS[i].story;
+}
+function hasProphetTranslation(lang){
+  return lang === 'en' || !!prophetTranslations[lang];
+}
+
+function renderProphetDetail(status){
+  const i = currentProphetIndex;
+  const p = PROPHETS[i];
   const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent('story of prophet ' + p.name.replace(' ﷺ','') + ' islamic lecture')}`;
+
+  const tabsHtml = `
+    <div class="qtabs" style="margin-bottom:14px;">
+      ${Object.keys(PROPHET_LANG_META).map(lang => `
+        <button class="qtab ${prophetLang===lang?'active':''}" onclick="switchProphetLang('${lang}')">${PROPHET_LANG_META[lang].flag} ${PROPHET_LANG_META[lang].label}</button>
+      `).join('')}
+    </div>
+  `;
+
+  let bodyHtml;
+  if(status === 'loading'){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">✨ Translating this story into ${PROPHET_LANG_META[prophetLang].label}…</div>`;
+  } else if(status){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't fetch the ${PROPHET_LANG_META[prophetLang].label} translation right now (${status}). Try this tab again.</div>`;
+  } else if(prophetLang !== 'en' && !hasProphetTranslation(prophetLang)){
+    bodyHtml = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">One moment — fetching this translation…</div>`;
+  } else {
+    bodyHtml = `
+      <div class="prophet-story-text" id="prophetStoryText">${getProphetStory(i)}</div>
+      ${prophetLang !== 'en' ? `<div class="dhikr-meaning" style="margin-top:10px;">✨ AI-assisted translation — please verify with a native speaker for precise wording.</div>` : ''}
+      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+    `;
+  }
+
   document.getElementById('prophetDetailContent').innerHTML = `
     <div class="prophet-icon-lg prophet-icon-xl">${p.icon}</div>
     <div style="text-align:center; margin-bottom:18px;">
       <div class="hero-name" style="font-size:28px;">${p.name} <span style="color:var(--muted); font-size:19px;">— ${p.ar}</span></div>
-      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${p.title}</div>
+      <div class="prayer-time" style="margin-top:4px; font-size:14px;">${getProphetTitle(i)}</div>
     </div>
+    ${tabsHtml}
     <div class="ayah-block">
-      <div class="prophet-story-text" id="prophetStoryText">${p.story}</div>
-      <button class="mushaf-play-btn" id="prophetPlayBtn" style="width:100%; border-radius:14px; margin-top:16px; font-size:13.5px; font-weight:700;" onclick="toggleProphetSpeech(${i})">▶ Listen to the story</button>
+      ${bodyHtml}
       <a href="${ytUrl}" target="_blank" rel="noopener" class="mushaf-nav-btn" style="display:block; text-align:center; margin-top:10px; text-decoration:none;">🎬 Watch related videos on YouTube</a>
     </div>
   `;
-  window.scrollTo(0,0);
+}
+
+function switchProphetLang(lang){
+  stopProphetSpeech();
+  prophetLang = lang;
+  if(lang !== 'en' && !hasProphetTranslation(lang)){
+    fetchProphetTranslations(lang);
+    return;
+  }
+  renderProphetDetail();
+}
+
+async function fetchProphetTranslations(lang){
+  renderProphetDetail('loading');
+  const langName = PROPHET_LANG_META[lang].label;
+  const prompt = `Translate the following 15 short Islamic prophet story titles and stories from English into natural, respectful, everyday-reader ${langName}. Keep Islamic proper nouns (Allah, prophet names, place names) as commonly transliterated in ${langName}. Return ONLY a JSON array of 15 objects in the exact same order as given, each with keys "title" and "story" — no markdown, no commentary, no extra text.
+
+${JSON.stringify(PROPHETS.map(p => ({ name:p.name, title:p.title, story:p.story })))}`;
+  try{
+    let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
+    raw = raw.replace(/^```json\s*|```$/g, '').trim();
+    const arr = JSON.parse(raw);
+    if(!Array.isArray(arr) || arr.length !== PROPHETS.length) throw new Error('unexpected response shape');
+    prophetTranslations[lang] = arr;
+    localStorage.setItem('deen_prophet_' + lang, JSON.stringify(arr));
+    renderProphetDetail();
+  }catch(e){
+    renderProphetDetail(e.message || 'error');
+  }
 }
 
 function closeProphetDetail(){
@@ -2235,9 +2402,12 @@ function closeProphetDetail(){
 function toggleProphetSpeech(i){
   const btn = document.getElementById('prophetPlayBtn');
   if(isTtsPlaying()){ stopProphetSpeech(); return; }
-  const p = PROPHETS[i];
+  const meta = PROPHET_LANG_META[prophetLang];
+  const text = prophetLang === 'en'
+    ? `The story of ${PROPHETS[i].name}. ${getProphetStory(i)}`
+    : `${getProphetTitle(i)}. ${getProphetStory(i)}`;
   btn.textContent = '⏸ Stop';
-  universalSpeak(`The story of ${p.name}. ${p.story}`, 'en-US', () => {
+  universalSpeak(text, meta.voice, () => {
     btn.textContent = '▶ Listen to the story';
   });
 }
@@ -2247,23 +2417,367 @@ function stopProphetSpeech(){
   if(btn) btn.textContent = '▶ Listen to the story';
 }
 
+// ---------------- Nearby Mosques (OpenStreetMap Overpass — free, no API key) ----------------
+function haversineKm(lat1, lng1, lat2, lng2){
+  const R = 6371;
+  const dLat = toRad(lat2-lat1), dLng = toRad(lng2-lng1);
+  const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function findNearbyMosques(){
+  const listEl = document.getElementById('mosquesList');
+  listEl.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Getting your location…</div>`;
+  if(!('geolocation' in navigator)){
+    listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Location isn't available on this device/browser.</div>`;
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const { latitude, longitude } = pos.coords;
+    listEl.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Searching nearby mosques…</div>`;
+    const radius = 8000; // meters
+    const query = `[out:json][timeout:20];(node["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${latitude},${longitude});way["amenity"="place_of_worship"]["religion"="muslim"](around:${radius},${latitude},${longitude}););out center 40;`;
+    try{
+      const res = await fetch('https://overpass-api.de/api/interpreter', {
+        method: 'POST',
+        body: 'data=' + encodeURIComponent(query)
+      });
+      if(!res.ok) throw new Error('Overpass ' + res.status);
+      const json = await res.json();
+      const places = (json.elements || []).map(el => {
+        const lat = el.lat || (el.center && el.center.lat);
+        const lng = el.lon || (el.center && el.center.lon);
+        if(!lat || !lng) return null;
+        return {
+          name: (el.tags && (el.tags.name || el.tags['name:en'])) || 'Mosque',
+          lat, lng,
+          distKm: haversineKm(latitude, longitude, lat, lng)
+        };
+      }).filter(Boolean).sort((a,b) => a.distKm - b.distKm).slice(0, 20);
+
+      if(!places.length){
+        listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">No mosques found within ${radius/1000}km on OpenStreetMap. Try again in a busier area — coverage depends on OSM data completeness.</div>`;
+        return;
+      }
+      listEl.innerHTML = places.map(p => `
+        <div class="surah-row">
+          <div class="prophet-icon" style="font-size:20px; display:flex; align-items:center; justify-content:center;">🕌</div>
+          <div class="surah-info">
+            <div class="surah-name">${p.name}</div>
+            <div class="surah-sub">${p.distKm.toFixed(1)} km away</div>
+          </div>
+          <a href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener" class="mushaf-nav-btn" style="flex-shrink:0; padding:8px 12px; font-size:12px;" onclick="event.stopPropagation()">Directions</a>
+        </div>
+      `).join('');
+    }catch(e){
+      listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Couldn't reach the mosque search right now (${e.message || 'network error'}). Try again in a moment.</div>`;
+    }
+  }, (err) => {
+    listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Couldn't get your location — please allow location access and try again.</div>`;
+  }, { enableHighAccuracy: true, timeout: 12000 });
+}
+
+// ---------------- Islamic (Hijri) Calendar ----------------
+let calendarRendered = false;
+let hijriTodayCache = JSON.parse(localStorage.getItem('deen_hijri_today') || 'null'); // {key, data}
+let hijriMonthCache = JSON.parse(localStorage.getItem('deen_hijri_month') || 'null'); // {key, days}
+let hijriOccasionsCache = JSON.parse(localStorage.getItem('deen_hijri_occasions') || 'null'); // {hijriYear, list}
+
+// Fixed Hijri (month, day) pairs for the occasions most Muslims track day-to-day.
+// Sect-specific dates (e.g. exact moonsighting-based start of Ramadan/Eid) can
+// shift by a day in real life — this gives the standard calculated date.
+const ISLAMIC_OCCASIONS = [
+  { name:'Islamic New Year', icon:'🌙', hMonth:1, hDay:1 },
+  { name:'Day of Ashura', icon:'🤲', hMonth:1, hDay:10 },
+  { name:"Mawlid al-Nabi ﷺ", icon:'✨', hMonth:3, hDay:12 },
+  { name:'Start of Ramadan', icon:'🌒', hMonth:9, hDay:1 },
+  { name:"Laylatul Qadr (est.)", icon:'📿', hMonth:9, hDay:27 },
+  { name:'Eid al-Fitr', icon:'🎉', hMonth:10, hDay:1 },
+  { name:'Day of Arafah', icon:'⛰️', hMonth:12, hDay:9 },
+  { name:'Eid al-Adha', icon:'🕌', hMonth:12, hDay:10 }
+];
+
+function ddmmyyyy(y,m,d){ return `${String(d).padStart(2,'0')}-${String(m).padStart(2,'0')}-${y}`; }
+
+async function fetchHijriToday(){
+  const p = getSLParts();
+  const key = `${p.year}-${p.month}-${p.day}`;
+  if(hijriTodayCache && hijriTodayCache.key === key) return hijriTodayCache.data;
+  const res = await fetch(`https://api.aladhan.com/v1/gToH?date=${ddmmyyyy(p.year, p.month, p.day)}`);
+  if(!res.ok) throw new Error('Hijri lookup ' + res.status);
+  const json = await res.json();
+  const data = json.data;
+  hijriTodayCache = { key, data };
+  localStorage.setItem('deen_hijri_today', JSON.stringify(hijriTodayCache));
+  return data;
+}
+
+async function fetchHijriMonth(){
+  const p = getSLParts();
+  const key = `${p.year}-${p.month}`;
+  if(hijriMonthCache && hijriMonthCache.key === key) return hijriMonthCache.days;
+  const res = await fetch(`https://api.aladhan.com/v1/gToHCalendar/${Number(p.month)}/${p.year}`);
+  if(!res.ok) throw new Error('Hijri calendar ' + res.status);
+  const json = await res.json();
+  const days = json.data || [];
+  hijriMonthCache = { key, days };
+  localStorage.setItem('deen_hijri_month', JSON.stringify(hijriMonthCache));
+  return days;
+}
+
+async function fetchIslamicOccasions(hijriYear){
+  if(hijriOccasionsCache && hijriOccasionsCache.hijriYear === hijriYear) return hijriOccasionsCache.list;
+  const p = getSLParts();
+  const todayStr = `${p.year}-${p.month}-${p.day}`;
+  const list = [];
+  for(const occ of ISLAMIC_OCCASIONS){
+    let year = hijriYear;
+    let gDate = await hijriToGregorian(occ.hDay, occ.hMonth, year);
+    // if it already passed this Hijri year, show next year's occurrence instead
+    if(gDate && gDate.iso < todayStr){
+      year = hijriYear + 1;
+      gDate = await hijriToGregorian(occ.hDay, occ.hMonth, year);
+    }
+    if(gDate) list.push({ ...occ, hijriYear: year, ...gDate });
+  }
+  list.sort((a,b) => a.iso.localeCompare(b.iso));
+  hijriOccasionsCache = { hijriYear, list };
+  localStorage.setItem('deen_hijri_occasions', JSON.stringify(hijriOccasionsCache));
+  return list;
+}
+
+async function hijriToGregorian(day, month, year){
+  try{
+    const res = await fetch(`https://api.aladhan.com/v1/hToG?date=${ddmmyyyy(year, month, day)}`);
+    if(!res.ok) return null;
+    const json = await res.json();
+    const g = json.data.gregorian; // { date:"DD-MM-YYYY", weekday:{en}, month:{en}, year, ... }
+    const [dd,mm,yyyy] = g.date.split('-');
+    return { iso: `${yyyy}-${mm}-${dd}`, display: `${Number(dd)} ${g.month.en} ${yyyy}` };
+  }catch(e){ return null; }
+}
+
+async function updateHomeHijriPreview(){
+  try{
+    const h = await fetchHijriToday();
+    const el = document.getElementById('homeHijriDate');
+    if(el) el.textContent = `${h.hijri.day} ${h.hijri.month.en} ${h.hijri.year} AH`;
+  }catch(e){
+    const el = document.getElementById('homeHijriDate');
+    if(el) el.textContent = 'Islamic Calendar';
+  }
+}
+
+// A lightweight, no-server "feed" — 3 cards that automatically rotate every
+// day, deterministically picked from the app's own content so there's
+// always something new to see without needing an external feed source.
+function renderHomeFeed(){
+  const el = document.getElementById('homeFeed');
+  if(!el) return;
+  const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(),0,0)) / 86400000);
+
+  const name = ASMA_UL_HUSNA[dayOfYear % ASMA_UL_HUSNA.length];
+  const prophet = PROPHETS[dayOfYear % PROPHETS.length];
+  const dua = DUA_LIBRARY[dayOfYear % DUA_LIBRARY.length];
+
+  el.innerHTML = `
+    <div class="surah-row" onclick="goPage('asma')">
+      <div class="prophet-icon" style="font-size:20px; display:flex; align-items:center; justify-content:center;">🌟</div>
+      <div class="surah-info">
+        <div class="surah-name">Name of Allah — ${name.tr}</div>
+        <div class="surah-sub">${name.en}</div>
+      </div>
+    </div>
+    <div class="surah-row" onclick="goPage('prophets')">
+      <div class="prophet-icon" style="font-size:20px; display:flex; align-items:center; justify-content:center;">📖</div>
+      <div class="surah-info">
+        <div class="surah-name">Today's Story — ${prophet.name}</div>
+        <div class="surah-sub">${prophet.title}</div>
+      </div>
+    </div>
+    <div class="surah-row" onclick="goPage('adhkar')">
+      <div class="prophet-icon" style="font-size:20px; display:flex; align-items:center; justify-content:center;">🤲</div>
+      <div class="surah-info">
+        <div class="surah-name">Dua Reminder — ${dua.cat}</div>
+        <div class="surah-sub">${dua.en.length > 70 ? dua.en.slice(0,70)+'…' : dua.en}</div>
+      </div>
+    </div>
+  `;
+}
+
+async function renderCalendar(){
+  calendarRendered = true;
+  const el = document.getElementById('calendarContent');
+  el.innerHTML = `<div class="loading-txt"><div class="spinner"></div>Loading Hijri date…</div>`;
+  try{
+    const [today, monthDays, ] = await Promise.all([ fetchHijriToday(), fetchHijriMonth() ]);
+    const occasions = await fetchIslamicOccasions(Number(today.hijri.year));
+    const p = getSLParts();
+    const todayIso = `${p.year}-${p.month}-${p.day}`;
+
+    el.innerHTML = `
+      <div class="ayah-block" style="text-align:center; margin-bottom:18px;">
+        <div style="font-size:13px; color:var(--muted); margin-bottom:4px;">${today.hijri.weekday.en} · Today</div>
+        <div class="hero-name" style="font-size:30px;">${today.hijri.day} ${today.hijri.month.en} <span style="color:var(--muted); font-size:20px;">${today.hijri.year} AH</span></div>
+        <div class="prayer-time" style="margin-top:6px; font-size:14px;">${today.hijri.month.ar} · Gregorian: ${today.gregorian.day} ${today.gregorian.month.en} ${today.gregorian.year}</div>
+      </div>
+
+      <div class="section-title">Upcoming Occasions</div>
+      <div style="margin-bottom:18px;">
+        ${occasions.map(o => `
+          <div class="surah-row">
+            <div class="prophet-icon" style="font-size:22px; display:flex; align-items:center; justify-content:center;">${o.icon}</div>
+            <div class="surah-info">
+              <div class="surah-name">${o.name}</div>
+              <div class="surah-sub">${o.hDay} ${today.hijri.month.number === o.hMonth ? today.hijri.month.en : ''} ${o.hijriYear} AH · ${o.display}</div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="section-title">This Month (${today.gregorian.month.en} ${today.gregorian.year})</div>
+      <div>
+        ${monthDays.map(d => {
+          const iso = `${d.gregorian.year}-${d.gregorian.month.number.toString().padStart(2,'0')}-${d.gregorian.day.toString().padStart(2,'0')}`;
+          const isToday = iso === todayIso;
+          return `
+          <div class="surah-row" style="${isToday ? 'background:var(--gold-dim); border-radius:12px;' : ''}">
+            <div class="surah-num" style="${isToday ? 'background:var(--gold); color:#151005;' : ''}">${d.gregorian.day}</div>
+            <div class="surah-info">
+              <div class="surah-name">${d.hijri.day} ${d.hijri.month.en} ${d.hijri.year} AH${isToday ? ' · Today' : ''}</div>
+              <div class="surah-sub">${d.gregorian.weekday.en}, ${d.gregorian.month.en} ${d.gregorian.day}</div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>
+    `;
+  }catch(e){
+    el.innerHTML = `<div class="dhikr-meaning" style="padding:30px 10px; text-align:center;">Couldn't load the Hijri calendar right now (${e.message || 'network error'}). Pull down to check your connection and try again.</div>`;
+  }
+}
+
+
 // ---------------- Quran (Arabic) & Translation (English) ----------------
 let SURAHS = [];
 let quranListLoaded = false;
 let qMode = 'arabic';
+let quranBrowseMode = 'surah'; // surah | juz | page | topic | fav
+let mushafReturnMode = 'surah';
+let favSurahs = JSON.parse(localStorage.getItem('deen_fav_surahs') || '[]');
+
+// Standard Uthmani Mushaf Juz starting pages (1–604), same pagination the
+// Mushaf reader already uses.
+const JUZ_START_PAGES = [1,22,42,62,82,102,121,142,162,182,201,222,242,262,282,302,322,342,362,382,402,422,442,462,482,502,522,542,562,582];
+
+// A curated (non-exhaustive) starting point for browsing the Quran by theme.
+const QURAN_TOPICS = [
+  { name:'Allah', icon:'🌟', refs:[{s:112,a:1,label:'Al-Ikhlas 112:1-4 — His Oneness'},{s:2,a:255,label:'Ayat al-Kursi, 2:255'},{s:59,a:22,label:'Al-Hashr 59:22-24 — His Names'}] },
+  { name:'Patience', icon:'🤲', refs:[{s:2,a:153,label:'Al-Baqarah 2:153'},{s:3,a:200,label:'Aal-Imran 3:200'},{s:94,a:5,label:'Ash-Sharh 94:5-6'}] },
+  { name:'Prayer', icon:'🕌', refs:[{s:2,a:238,label:'Al-Baqarah 2:238'},{s:29,a:45,label:"Al-Ankabut 29:45"},{s:20,a:14,label:'Ta-Ha 20:14'}] },
+  { name:'Parents', icon:'👪', refs:[{s:17,a:23,label:'Al-Isra 17:23-24'},{s:31,a:14,label:'Luqman 31:14'},{s:46,a:15,label:"Al-Ahqaf 46:15"}] },
+  { name:'Charity', icon:'🤍', refs:[{s:2,a:261,label:'Al-Baqarah 2:261'},{s:9,a:60,label:'At-Tawbah 9:60'},{s:2,a:271,label:'Al-Baqarah 2:271'}] },
+  { name:'Gratitude', icon:'🙏', refs:[{s:14,a:7,label:'Ibrahim 14:7'},{s:31,a:12,label:'Luqman 31:12'},{s:16,a:18,label:'An-Nahl 16:18'}] },
+  { name:'Forgiveness', icon:'✨', refs:[{s:39,a:53,label:'Az-Zumar 39:53'},{s:42,a:40,label:"Ash-Shura 42:40"},{s:24,a:22,label:'An-Nur 24:22'}] },
+  { name:'Trials & Hardship', icon:'⛰️', refs:[{s:2,a:286,label:'Al-Baqarah 2:286'},{s:2,a:155,label:'Al-Baqarah 2:155-157'},{s:65,a:2,label:'At-Talaq 65:2-3'}] },
+  { name:'Marriage & Family', icon:'💞', refs:[{s:30,a:21,label:'Ar-Rum 30:21'},{s:4,a:19,label:"An-Nisa 4:19"}] },
+  { name:'Anger & Forbearance', icon:'🕊️', refs:[{s:3,a:134,label:'Aal-Imran 3:134'},{s:42,a:37,label:"Ash-Shura 42:37"}] },
+  { name:'Death & Afterlife', icon:'🌙', refs:[{s:3,a:185,label:'Aal-Imran 3:185'},{s:29,a:57,label:"Al-Ankabut 29:57"},{s:99,a:1,label:'Az-Zalzalah 99:1-8'}] },
+  { name:'Knowledge', icon:'📚', refs:[{s:20,a:114,label:'Ta-Ha 20:114'},{s:58,a:11,label:"Al-Mujadila 58:11"},{s:39,a:9,label:'Az-Zumar 39:9'}] }
+];
+
+function switchQuranMode(mode){
+  if(mode === 'page'){ openMushaf(1); return; }
+  quranBrowseMode = mode;
+  document.querySelectorAll('#quranModeTabs .qtab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  document.getElementById('quranSurahList').style.display = 'none';
+  document.getElementById('quranJuzList').style.display = 'none';
+  document.getElementById('quranTopicList').style.display = 'none';
+  document.getElementById('quranTopicDetail').style.display = 'none';
+  document.getElementById('surahSearch').style.display = (mode === 'surah' || mode === 'fav') ? 'block' : 'none';
+  if(mode === 'surah'){ document.getElementById('quranSurahList').style.display = 'block'; renderSurahList(SURAHS); }
+  else if(mode === 'fav'){ document.getElementById('quranSurahList').style.display = 'block'; renderSurahList(SURAHS.filter(s => favSurahs.includes(s.number))); }
+  else if(mode === 'juz'){ document.getElementById('quranJuzList').style.display = 'block'; renderJuzList(); }
+  else if(mode === 'topic'){ document.getElementById('quranTopicList').style.display = 'block'; renderTopicList(); }
+}
+
+function toggleFavSurah(num, ev){
+  ev.stopPropagation();
+  const i = favSurahs.indexOf(num);
+  if(i > -1) favSurahs.splice(i, 1); else favSurahs.push(num);
+  localStorage.setItem('deen_fav_surahs', JSON.stringify(favSurahs));
+  if(quranBrowseMode === 'fav') renderSurahList(SURAHS.filter(s => favSurahs.includes(s.number)));
+  else renderSurahList(SURAHS);
+}
+
+function renderJuzList(){
+  document.getElementById('quranJuzList').innerHTML = JUZ_START_PAGES.map((page, i) => `
+    <div class="surah-row" onclick="loadMushafPageFromList(${page})">
+      <div class="surah-num">${i+1}</div>
+      <div class="surah-info">
+        <div class="surah-name">Juz ${i+1}</div>
+        <div class="surah-sub">Starts at Mushaf page ${page}</div>
+      </div>
+    </div>
+  `).join('');
+}
+function loadMushafPageFromList(page){ openMushaf(page); }
+
+function renderTopicList(){
+  document.getElementById('quranTopicList').innerHTML = `
+    <div class="dhikr-meaning" style="margin-bottom:12px;">A curated starting point, not exhaustive — tap a topic to jump to related ayahs.</div>
+    ${QURAN_TOPICS.map((t,i) => `
+      <div class="surah-row" onclick="openTopic(${i})">
+        <div class="prophet-icon" style="font-size:20px; display:flex; align-items:center; justify-content:center;">${t.icon}</div>
+        <div class="surah-info">
+          <div class="surah-name">${t.name}</div>
+          <div class="surah-sub">${t.refs.length} references</div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+function openTopic(i){
+  const t = QURAN_TOPICS[i];
+  document.getElementById('quranTopicList').style.display = 'none';
+  const el = document.getElementById('quranTopicDetail');
+  el.style.display = 'block';
+  el.innerHTML = `
+    <button class="back-btn" onclick="closeTopic()">← Topics</button>
+    <div class="section-title" style="margin-top:0;">${t.icon} ${t.name}</div>
+    ${t.refs.map(r => `
+      <div class="surah-row" onclick="jumpToAyah(${r.s},${r.a})">
+        <div class="surah-num">📖</div>
+        <div class="surah-info"><div class="surah-name">${r.label}</div></div>
+      </div>
+    `).join('')}
+  `;
+}
+function closeTopic(){
+  document.getElementById('quranTopicDetail').style.display = 'none';
+  document.getElementById('quranTopicList').style.display = 'block';
+}
+async function jumpToAyah(surah, ayah){
+  try{
+    const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/quran-uthmani`);
+    const json = await res.json();
+    openMushaf(json.data.page);
+  }catch(e){
+    openMushaf(1);
+  }
+}
 function switchQtab(mode){
   qMode = mode;
   document.getElementById('qtab-arabic').classList.toggle('active', mode==='arabic');
   document.getElementById('qtab-translation').classList.toggle('active', mode==='translation');
   document.getElementById('mushafView').style.display = 'none';
   document.getElementById('quranReader').style.display = 'none';
-  document.getElementById('quranSurahList').style.display = 'block';
-  renderSurahList(SURAHS);
+  switchQuranMode(quranBrowseMode);
 }
 function filterSurahs(q){
   q = q.trim().toLowerCase();
-  if(!q){ renderSurahList(SURAHS); return; }
-  const f = SURAHS.filter(s => s.englishName.toLowerCase().includes(q) || s.name.includes(q) || s.englishNameTranslation.toLowerCase().includes(q) || String(s.number)===q);
+  const base = quranBrowseMode === 'fav' ? SURAHS.filter(s => favSurahs.includes(s.number)) : SURAHS;
+  if(!q){ renderSurahList(base); return; }
+  const f = base.filter(s => s.englishName.toLowerCase().includes(q) || s.name.includes(q) || s.englishNameTranslation.toLowerCase().includes(q) || String(s.number)===q);
   renderSurahList(f);
 }
 async function loadSurahList(){
@@ -2281,6 +2795,10 @@ async function loadSurahList(){
 }
 function renderSurahList(list){
   const listEl = document.getElementById('quranSurahList');
+  if(!list.length){
+    listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">No favorites yet — tap the ⭐ on any surah to add it here.</div>`;
+    return;
+  }
   listEl.innerHTML = list.map(s => `
     <div class="surah-row" onclick="openSurah(${s.number})">
       <div class="surah-num">${s.number}</div>
@@ -2288,24 +2806,18 @@ function renderSurahList(list){
         <div class="surah-name">${s.englishName} <span style="color:var(--muted); font-weight:400;">— ${s.name}</span></div>
         <div class="surah-sub">${s.englishNameTranslation} · ${s.numberOfAyahs} verses</div>
       </div>
+      <button onclick="toggleFavSurah(${s.number}, event)" style="background:none; border:none; font-size:19px; color:${favSurahs.includes(s.number) ? 'var(--gold)' : 'var(--muted)'}; padding:6px;" aria-label="Toggle favorite">${favSurahs.includes(s.number) ? '★' : '☆'}</button>
     </div>
   `).join('');
 }
 async function openSurah(number){
   if(qMode === 'arabic'){
-    // Realistic Mushaf page view for Arabic reading
-    const listEl = document.getElementById('quranSurahList');
-    const mushafEl = document.getElementById('mushafView');
-    listEl.style.display = 'none';
-    mushafEl.style.display = 'block';
-    document.getElementById('mushafContent').innerHTML = '<div class="loading-txt"><div class="spinner"></div>Loading page…</div>';
     try{
       const res = await fetch(`https://api.alquran.cloud/v1/ayah/${number}:1/quran-uthmani`);
       const json = await res.json();
-      const page = json.data.page;
-      loadMushafPage(page);
+      openMushaf(json.data.page);
     }catch(e){
-      document.getElementById('mushafContent').innerHTML = '<div class="loading-txt">Could not load this page — check your connection.</div>';
+      openMushaf(1);
     }
     return;
   }
@@ -2333,7 +2845,19 @@ async function openSurah(number){
 }
 function closeSurah(){
   document.getElementById('quranReader').style.display = 'none';
-  document.getElementById('quranSurahList').style.display = 'block';
+  switchQuranMode(quranBrowseMode);
+}
+
+function openMushaf(page){
+  mushafReturnMode = quranBrowseMode;
+  document.getElementById('quranSurahList').style.display = 'none';
+  document.getElementById('quranJuzList').style.display = 'none';
+  document.getElementById('quranTopicList').style.display = 'none';
+  document.getElementById('quranTopicDetail').style.display = 'none';
+  document.getElementById('quranReader').style.display = 'none';
+  document.getElementById('mushafView').style.display = 'block';
+  document.getElementById('mushafContent').innerHTML = '<div class="loading-txt"><div class="spinner"></div>Loading page…</div>';
+  loadMushafPage(page);
 }
 
 // ---------------- Mushaf page-flip view ----------------
@@ -2402,7 +2926,7 @@ function jumpToMushafPage(v){ loadMushafPage(v); }
 function closeMushaf(){
   stopMushafAudio();
   document.getElementById('mushafView').style.display = 'none';
-  document.getElementById('quranSurahList').style.display = 'block';
+  switchQuranMode(mushafReturnMode === 'page' ? 'surah' : mushafReturnMode);
 }
 
 // Swipe navigation on the mushaf page
@@ -2888,11 +3412,8 @@ async function sendChat(){
     return;
   }
 
-  // no local match — fall back to Claude, then free Gemini, then give up gracefully
-  if(!AI_KEY && !GEMINI_KEY){
-    addBotMessage(`I don't have that one memorized yet 🤲 Try a chip above, or add a free Gemini key (or Claude key) in Settings (⚙️) to unlock answers for anything.`, {plain:true});
-    return;
-  }
+  // no local match — use the built-in AI (works out of the box), or the
+  // person's own Claude key from Settings if they added one for extra quota
   addTyping();
   try{
     const reply = AI_KEY ? await askClaude(text) : await askGemini(text);
@@ -2900,7 +3421,7 @@ async function sendChat(){
     addBotMessage(`${reply}<div class="dua-note">✨ AI-assisted match — for religious rulings, please verify with a qualified scholar.</div>`);
   }catch(e){
     removeTyping();
-    addBotMessage(`Couldn't reach the AI right now (${e.message || 'network error'}). Check your API key in Settings, or try one of the quick topics above.`, {plain:true});
+    addBotMessage(`Couldn't reach the AI right now (${e.message || 'network error'}). Try again in a moment, or try one of the quick topics above.`, {plain:true});
   }
 }
 
@@ -2916,17 +3437,7 @@ ${refList}
 Pick the single closest-matching dua by its number. Reply with ONLY this exact JSON, no markdown, no code fences, no extra text:
 {"index": <number or -1 if truly nothing fits>, "note": "<one warm sentence on why this dua fits, or if index is -1, a brief compassionate general Islamic reflection on their situation with no invented Arabic text>"}`;
 
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-  });
-  if(!res.ok){
-    const errText = await res.text().catch(()=> '');
-    throw new Error('Gemini ' + res.status + (errText ? ': '+errText.slice(0,120) : ''));
-  }
-  const data = await res.json();
-  let raw = (((data.candidates||[])[0]||{}).content?.parts||[]).map(p=>p.text).join('').trim();
+  let raw = (GEMINI_KEY ? await askGeminiRaw(prompt) : await callAi(prompt)).trim();
   raw = raw.replace(/^```json\s*|```$/g, '').trim();
   let parsed;
   try{ parsed = JSON.parse(raw); }catch(e){ throw new Error('unexpected AI response'); }
@@ -2981,6 +3492,7 @@ setInterval(()=>{
 const KAABA_LAT = 21.4225, KAABA_LNG = 39.8262;
 let qiblaBearing = null; // degrees from true north to the Kaaba, from the user's location
 let deviceHeading = null;
+let qiblaAligned = false;
 
 function toRad(d){ return d * Math.PI / 180; }
 function toDeg(r){ return r * 180 / Math.PI; }
@@ -3003,7 +3515,21 @@ function updateQiblaNeedle(){
   const rotation = qiblaBearing - heading;
   needle.style.transform = `rotate(${rotation}deg)`;
   deg.style.display = 'block';
-  deg.textContent = `${Math.round(qiblaBearing)}° from true north`;
+
+  // how far off (in degrees) the phone's forward direction is from pointing at the Kaaba
+  const norm = ((rotation % 360) + 360) % 360;
+  const diff = norm > 180 ? 360 - norm : norm;
+  const isAligned = diff <= 5;
+
+  if(isAligned){
+    deg.textContent = '🎯 Facing the Qibla!';
+    deg.style.color = 'var(--gold)';
+    if(!qiblaAligned && 'vibrate' in navigator){ navigator.vibrate(200); }
+  } else {
+    deg.textContent = `${Math.round(qiblaBearing)}° from true north`;
+    deg.style.color = '';
+  }
+  qiblaAligned = isAligned;
 }
 
 function handleOrientation(e){
@@ -3066,6 +3592,8 @@ async function startQibla(){
 
 // init
 fetchPrayerTimes();
+updateHomeHijriPreview();
+renderHomeFeed();
 updateToggles();
 
 if('serviceWorker' in navigator){
