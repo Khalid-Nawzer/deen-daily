@@ -2473,7 +2473,7 @@ function findNearbyMosques(){
       listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Couldn't reach the mosque search right now (${e.message || 'network error'}). Try again in a moment.</div>`;
     }
   }, (err) => {
-    listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Couldn't get your location — please allow location access and try again.</div>`;
+    listEl.innerHTML = `<div class="dhikr-meaning" style="padding:20px 10px; text-align:center;">Couldn't get your location. If this keeps happening, check your phone's Settings → Apps → Deen Daily → Permissions → Location, and make sure it's allowed.</div>`;
   }, { enableHighAccuracy: true, timeout: 12000 });
 }
 
