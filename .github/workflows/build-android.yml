@@ -34,7 +34,7 @@ jobs:
           python3 -c "
           p = 'android/app/src/main/AndroidManifest.xml'
           c = open(p).read()
-          perms = '<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\n<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>\n'
+          perms = '<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\n<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>\n<uses-permission android:name=\"android.permission.VIBRATE\"/>\n'
           c = c.replace('<application', perms + '<application', 1)
           open(p,'w').write(c)
           "
