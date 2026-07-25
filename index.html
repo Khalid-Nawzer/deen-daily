@@ -1152,6 +1152,7 @@ async function fetchPrayerTimes(){
     localStorage.setItem('deen_times_cache', JSON.stringify({date: getSLDateKey(), times: t}));
     scheduleNativeAzanNotifications();
     scheduleDailyStoryNotification();
+    scheduleMotivationNotifications();
   }catch(e){
     const cached = JSON.parse(localStorage.getItem('deen_times_cache') || 'null');
     if(cached && cached.date === getSLDateKey()){
@@ -1609,7 +1610,7 @@ async function enableNotifs(){
     const { LocalNotifications } = Capacitor.Plugins;
     const perm = await LocalNotifications.requestPermissions();
     await updateToggles();
-    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); }
+    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); scheduleDailyStoryNotification(); scheduleMotivationNotifications(); }
     return;
   }
   if(!('Notification' in window)) return;
@@ -3207,7 +3208,78 @@ async function scheduleDailyStoryNotification(){
   }catch(e){ console.error('daily story schedule failed', e); }
 }
 
-// ================= DUA AI =================
+// A pool of short, standalone reminders — general encouragement, not
+// presented as direct Quran/Hadith quotations, so nothing here is at risk
+// of being a misattributed citation.
+const MOTIVATION_QUOTES = [
+  "Your deen doesn't need to be perfect today — just present. Show up for one prayer at a time. 🤲",
+  "Someone who loves you made dua for you today without you knowing. Keep going for them too. 💛",
+  "A small good deed done consistently outweighs a big one done once. Stay steady. 🌙",
+  "Your struggle to stay close to Allah is itself worship — don't discount the effort. 🕊️",
+  "Take a breath. Say Alhamdulillah for one thing right now, out loud if you can. ✨",
+  "The parents who raised you are still praying your name into their duas. Call them today. 🤍",
+  "Every prayer you complete is a small victory nobody sees but Allah. That's enough. 🕌",
+  "Forgiveness is one sincere 'Astaghfirullah' away. Say it now, mean it, move forward. 🌿",
+  "You are loved by people who mention you in their duas without telling you. Keep being someone worth praying for. 💫",
+  "Consistency beats intensity. A little dhikr daily builds more than a lot done rarely. 📿",
+  "Whatever today felt like, Maghrib is a fresh restart. Show up for it. 🌇",
+  "Someone somewhere is grateful Allah put you in their life. Be gentle with yourself today. 💛",
+  "Patience isn't passive — it's choosing to keep trusting Allah while you wait. 🤲",
+  "Your effort to learn even one new dua or ayah this week matters more than you think. 📖",
+  "The people who love you don't need you to be perfect — just present and trying. Same with Allah. 🌙",
+  "A single sincere prayer outweighs a hundred distracted ones. Slow down for the next one. 🕊️",
+  "Gratitude said quietly still counts. Whisper an Alhamdulillah right now. ✨",
+  "Your family's dua for you doesn't expire — it's still working even on your hardest days. 🤍",
+  "Small steps toward your deen today are still steps forward. Don't wait for 'perfect'. 🌿",
+  "Someone prayed for your ease today. Let that carry you through the next hour. 💫",
+  "Return to Allah the same way you'd return to someone who never stopped loving you — gently, without shame. 🕌",
+  "The strength to try again after missing a prayer is itself a form of faith. 📿",
+  "Today's reminder: you're still trying, and that is not nothing. Keep going. 🌙",
+  "Say a dua for someone you love today — it might be the exact dua they needed. 🤲"
+];
+
+async function scheduleMotivationNotifications(){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  const { LocalNotifications } = Capacitor.Plugins;
+  try{
+    const perm = await LocalNotifications.requestPermissions();
+    if(perm.display !== 'granted') return;
+    await LocalNotifications.createChannel({
+      id: 'motivation-channel', name: 'Daily Reminders', importance: 4, visibility: 1
+    });
+
+    const SLOT_HOURS = [10, 12, 15, 18, 19, 22]; // 10am, 12pm, 3pm, 6pm, 7pm, 10pm
+    const DAYS_AHEAD = 30; // pre-scheduled a month out, refreshed every time the app opens
+    const BASE_ID = 200;
+    const now = new Date();
+
+    // clear the previous batch first so we don't pile up duplicates on every app open
+    const oldIds = [];
+    for(let d = 0; d < DAYS_AHEAD; d++){
+      for(let s = 0; s < SLOT_HOURS.length; s++){ oldIds.push({ id: BASE_ID + d*10 + s }); }
+    }
+    await LocalNotifications.cancel({ notifications: oldIds });
+
+    const notifications = [];
+    for(let d = 0; d < DAYS_AHEAD; d++){
+      const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+      for(let s = 0; s < SLOT_HOURS.length; s++){
+        const fireAt = new Date(day.getFullYear(), day.getMonth(), day.getDate(), SLOT_HOURS[s], 0, 0);
+        if(fireAt <= now) continue; // don't schedule times already passed today
+        const absoluteDayIndex = Math.floor(fireAt.getTime() / 86400000);
+        const quote = MOTIVATION_QUOTES[(absoluteDayIndex * SLOT_HOURS.length + s) % MOTIVATION_QUOTES.length];
+        notifications.push({
+          id: BASE_ID + d*10 + s,
+          title: 'Deen Daily 🤲',
+          body: quote,
+          schedule: { at: fireAt },
+          channelId: 'motivation-channel'
+        });
+      }
+    }
+    if(notifications.length) await LocalNotifications.schedule({ notifications });
+  }catch(e){ console.error('motivation schedule failed', e); }
+}
 const DUA_LIBRARY = [
   { cat:'Travel', kw:['travel','trip','journey','flight','flying','road','driving','airport'],
     ar:'اللَّهُمَّ إِنَّا نَسْأَلُكَ فِي سَفَرِنَا هَذَا الْبِرَّ وَالتَّقْوَى، وَمِنَ الْعَمَلِ مَا تَرْضَى',
