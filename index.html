@@ -3168,14 +3168,14 @@ async function scheduleNativeAzanNotifications(){
     const perm = await LocalNotifications.requestPermissions();
     if(perm.display !== 'granted') return;
     await LocalNotifications.createChannel({
-      id: 'azan-channel', name: 'Azan', importance: 5, sound: 'azan.mp3', visibility: 1
+      id: 'azan-channel-v3', name: 'Azan', importance: 5, sound: 'azan.mp3', visibility: 1
     });
     const notifications = PRAYERS.map((p, i) => {
       const [hh, mm] = (p.time || '00:00').split(':').map(Number);
       const now = new Date();
       const fireAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
       if(fireAt < now) fireAt.setDate(fireAt.getDate() + 1);
-      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name}`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel' };
+      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name}`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel-v3' };
     });
     await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
     await LocalNotifications.schedule({ notifications });
