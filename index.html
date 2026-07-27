@@ -1026,7 +1026,40 @@
   </div>
 </div>
 
-<div id="page-more" class="page">
+<div id="page-tajweed" class="page">
+  <div class="section-title">Tajweed — Learn to Read Correctly</div>
+  <div class="dhikr-meaning" style="margin-bottom:14px;">Letters, vowel marks (Harakat), and the core Tajweed rules. Tap 🔊 to hear a letter pronounced. This is a study reference — for real correction of your recitation, learning with a qualified teacher is irreplaceable.</div>
+  <div class="qtabs" id="tajweedTabs">
+    <button class="qtab active" data-mode="letters" onclick="switchTajweedTab('letters')">أ Letters</button>
+    <button class="qtab" data-mode="harakat" onclick="switchTajweedTab('harakat')">ــَ Harakat</button>
+    <button class="qtab" data-mode="rules" onclick="switchTajweedTab('rules')">📏 Rules</button>
+  </div>
+  <div id="tajweedContent"></div>
+</div>
+
+<div id="page-recite" class="page">
+  <div class="section-title">Practice &amp; Compare</div>
+  <div class="dhikr-meaning" style="margin-bottom:14px;">This tool cannot automatically check your Tajweed — no app can reliably do that yet, and we'd rather tell you that plainly than pretend otherwise. Play the reciter, then record yourself right after and compare by ear. Real correction still needs a qualified teacher.</div>
+  <div class="ayah-block">
+    <div class="zakat-field">
+      <label>Surah</label>
+      <select id="reciteSurahSelect" onchange="onReciteSurahChange()"></select>
+    </div>
+    <div class="zakat-field">
+      <label>Ayah number</label>
+      <input type="number" id="reciteAyahInput" min="1" value="1" inputmode="numeric">
+    </div>
+    <button class="mushaf-play-btn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700;" onclick="playReciteReference()">▶ Play Reciter</button>
+    <div id="reciteRefStatus" style="margin-top:8px; font-size:12.5px; color:var(--muted); text-align:center;"></div>
+
+    <div style="height:14px;"></div>
+    <button class="mushaf-play-btn" id="reciteRecordBtn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700; background:linear-gradient(135deg,#c0392b,#922b21);" onclick="toggleReciteRecording()">🎙️ Record Yourself</button>
+    <div id="reciteRecordStatus" style="margin-top:8px; font-size:12.5px; color:var(--muted); text-align:center;"></div>
+    <div id="recitePlaybackBox" style="display:none; margin-top:10px;">
+      <button class="mushaf-play-btn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700;" onclick="playReciteRecording()">▶ Play Your Recording</button>
+    </div>
+  </div>
+</div>
   <div class="section-title">More</div>
   <div class="feature-grid">
     <div class="feature-tile" onclick="goPage('adhkar')">
@@ -1056,6 +1089,14 @@
     <div class="feature-tile" onclick="goPage('zakat')">
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v2M12 15v2M9.5 15c0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2-1-1.6-2.5-2-2.5-.9-2.5-2 1.1-2 2.5-2 2.5.9 2.5 2"/></svg></div>
       <div class="feature-tile-lbl">Zakat Calculator</div>
+    </div>
+    <div class="feature-tile" onclick="goPage('tajweed')">
+      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><path d="M9 12h6M9 8h4"/></svg></div>
+      <div class="feature-tile-lbl">Learn Tajweed</div>
+    </div>
+    <div class="feature-tile" onclick="goPage('recite')">
+      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/></svg></div>
+      <div class="feature-tile-lbl">Practice &amp; Compare</div>
     </div>
 
     <div class="feature-tile" onclick="openNotesSheet()">
@@ -1904,7 +1945,7 @@ function goPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
-  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','mosques','zakat','more'];
+  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','mosques','zakat','tajweed','recite','more'];
   const navTarget = moreSubPages.includes(name) ? 'more' : name;
   document.getElementById('nav-'+navTarget)?.classList.add('active');
   window.scrollTo(0,0);
@@ -1915,6 +1956,8 @@ function goPage(name){
   if(name === 'hadith' && !hadithListLoaded){ loadHadithBookList(); }
   if(name === 'prophets' && !prophetsRendered){ renderProphets(); }
   if(name === 'calendar' && !calendarRendered){ renderCalendar(); }
+  if(name === 'tajweed' && !tajweedRendered){ tajweedRendered = true; switchTajweedTab('letters'); }
+  if(name === 'recite' && !reciteRendered){ reciteRendered = true; initRecitePractice(); }
 }
 
 // ---------------- Adhkar & Duas library ----------------
@@ -2473,6 +2516,203 @@ function stopProphetSpeech(){
   universalStop();
   const btn = document.getElementById('prophetPlayBtn');
   if(btn) btn.textContent = '▶ Listen to the story';
+}
+
+// ---------------- Tajweed Learning ----------------
+let tajweedRendered = false;
+let tajweedTab = 'letters';
+
+// The 28 letters with their point of articulation (makhraj), grouped roughly
+// front-to-back. Standard makharij al-huruf, taught the same way across
+// mainstream Tajweed curricula.
+const TAJWEED_LETTERS = [
+  { ar:'ا', name:'Alif', makhraj:'Throat (empty letter — paired with hamza, or used as a long vowel)', example:'اَ' },
+  { ar:'ب', name:'Ba', makhraj:'Both lips pressed together', example:'بَ' },
+  { ar:'ت', name:'Ta', makhraj:'Tip of tongue against the ridge behind the upper front teeth', example:'تَ' },
+  { ar:'ث', name:'Tha', makhraj:'Tip of tongue lightly between the front teeth', example:'ثَ' },
+  { ar:'ج', name:'Jeem', makhraj:'Middle of tongue against the roof of the mouth', example:'جَ' },
+  { ar:'ح', name:'Ha (heavy)', makhraj:'Middle of the throat', example:'حَ' },
+  { ar:'خ', name:'Kha', makhraj:'Upper part of the throat, near the back of the mouth', example:'خَ' },
+  { ar:'د', name:'Dal', makhraj:'Tip of tongue against the ridge behind the upper front teeth', example:'دَ' },
+  { ar:'ذ', name:'Dhal', makhraj:'Tip of tongue lightly between the front teeth (voiced version of Tha)', example:'ذَ' },
+  { ar:'ر', name:'Ra', makhraj:'Tip of tongue, slightly curled, with a light roll/flick', example:'رَ' },
+  { ar:'ز', name:'Zay', makhraj:'Tip of tongue near the edge of the front teeth, hissing sound', example:'زَ' },
+  { ar:'س', name:'Seen', makhraj:'Tip of tongue near the front teeth, light whistling sound', example:'سَ' },
+  { ar:'ش', name:'Sheen', makhraj:'Middle of tongue against the roof of the mouth, spread out', example:'شَ' },
+  { ar:'ص', name:'Sad (heavy)', makhraj:'Tip of tongue near front teeth — emphatic, heavier version of Seen', example:'صَ' },
+  { ar:'ض', name:'Dad (heavy)', makhraj:'Side of the tongue against the upper molars — unique to Arabic', example:'ضَ' },
+  { ar:'ط', name:'Ta (heavy)', makhraj:'Tip of tongue against the ridge — emphatic, heavier version of Ta', example:'طَ' },
+  { ar:'ظ', name:'Za (heavy)', makhraj:'Tip of tongue between the teeth — emphatic, heavier version of Dhal', example:'ظَ' },
+  { ar:'ع', name:"Ain", makhraj:'Middle of the throat, constricted', example:'عَ' },
+  { ar:'غ', name:'Ghain', makhraj:'Upper part of the throat (voiced version of Kha)', example:'غَ' },
+  { ar:'ف', name:'Fa', makhraj:'Inner edge of the lower lip against the tips of the upper front teeth', example:'فَ' },
+  { ar:'ق', name:'Qaf', makhraj:'Back of tongue against the soft palate, deep and heavy', example:'قَ' },
+  { ar:'ك', name:'Kaf', makhraj:'Back of tongue against the soft palate, slightly forward of Qaf', example:'كَ' },
+  { ar:'ل', name:'Lam', makhraj:'Edge of tongue against the gum ridge', example:'لَ' },
+  { ar:'م', name:'Meem', makhraj:'Both lips pressed together, sound passes through the nose', example:'مَ' },
+  { ar:'ن', name:'Noon', makhraj:'Tip of tongue against the gum ridge, sound passes through the nose', example:'نَ' },
+  { ar:'ه', name:'Ha (light)', makhraj:'Deepest part of the throat, breathy', example:'هَ' },
+  { ar:'و', name:'Waw', makhraj:'Rounded lips (consonant), or a long vowel after Damma', example:'وَ' },
+  { ar:'ي', name:'Ya', makhraj:'Middle of tongue near the roof of the mouth, or a long vowel after Kasra', example:'يَ' }
+];
+
+const TAJWEED_HARAKAT = [
+  { sym:'َ', name:'Fatha', desc:'A short "a" sound — the mouth opens slightly. Example: بَ = "ba".' },
+  { sym:'ِ', name:'Kasra', desc:'A short "i" sound — the lower lip drops. Example: بِ = "bi".' },
+  { sym:'ُ', name:'Damma', desc:'A short "u" sound — the lips round forward. Example: بُ = "bu".' },
+  { sym:'ْ', name:'Sukun', desc:'No vowel sound — the letter is pronounced as a stop, with no added vowel. Example: بْ = "b".' },
+  { sym:'ّ', name:'Shadda', desc:'Doubles/emphasizes the consonant — held for twice the normal length. Example: بّ = "bb".' },
+  { sym:'ً', name:'Fathatain (Tanween)', desc:'Adds an "an" sound at the end of a word — indefinite grammatical marker.' },
+  { sym:'ٍ', name:'Kasratain (Tanween)', desc:'Adds an "in" sound at the end of a word — indefinite grammatical marker.' },
+  { sym:'ٌ', name:'Dammatain (Tanween)', desc:'Adds an "un" sound at the end of a word — indefinite grammatical marker.' }
+];
+
+const TAJWEED_RULES = [
+  { title: 'Noon Sakinah (نْ) & Tanween — Izhar Halqi (Clear)',
+    body: 'When ن or Tanween is followed by one of the 6 throat letters — ء ه ع ح غ خ — it is pronounced clearly, with no merging or nasal change.' },
+  { title: 'Noon Sakinah & Tanween — Idgham (Merging)',
+    body: 'When followed by one of 6 letters — ي ر م ل و ن (remembered as "يرملون") — the Noon/Tanween sound merges into the next letter.<br><br>• With Ghunnah (nasal hum): ي ن م و<br>• Without Ghunnah: ل ر' },
+  { title: 'Noon Sakinah & Tanween — Iqlab (Conversion)',
+    body: 'When followed by ب, the Noon/Tanween sound converts to a light Meem sound with nasalization. Often marked with a small ﻡ above the letter in the Mushaf.' },
+  { title: 'Noon Sakinah & Tanween — Ikhfa (Concealment)',
+    body: 'When followed by one of the remaining 15 letters — ت ث ج د ذ ز س ش ص ض ط ظ ف ق ك — the Noon/Tanween sound is concealed, pronounced with a light nasal hum, between clear and merged.' },
+  { title: 'Meem Sakinah (مْ) — Ikhfa Shafawi',
+    body: 'When مْ is followed by ب, it is pronounced with a hidden nasal sound, lips lightly closed.' },
+  { title: 'Meem Sakinah — Idgham Shafawi',
+    body: 'When مْ is followed by another م, the two merge into one emphasized Meem with a nasal hum.' },
+  { title: 'Meem Sakinah — Izhar Shafawi',
+    body: 'When مْ is followed by any letter other than ب or م, it is pronounced clearly and normally.' },
+  { title: 'Qalqalah (Echoing sound)',
+    body: 'Five letters — ق ط ب ج د (remembered as "قطب جد") — get a slight bouncing/echoing sound when they carry a Sukun, especially at the end of a word.' },
+  { title: 'Madd (Elongation) — overview',
+    body: "Madd Asli / Tabee'i (natural madd) is held for 2 counts — occurs when Alif follows a Fatha, Waw follows a Damma, or Ya follows a Kasra, with no Hamza or Sukun after it.<br><br>Madd Far'i (derived madd) is longer (4–6 counts), triggered by a Hamza or Sukun following the madd letter, and has several sub-types with genuine scholarly detail (Muttasil, Munfasil, Aarid Lissukoon, Lazim, and more). This is a good place to study with a teacher — the rules interact with each other and are easy to misapply without guidance." }
+];
+
+function switchTajweedTab(mode){
+  tajweedTab = mode;
+  document.querySelectorAll('#tajweedTabs .qtab').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  const el = document.getElementById('tajweedContent');
+  if(mode === 'letters'){
+    el.innerHTML = TAJWEED_LETTERS.map((l,i) => `
+      <div class="surah-row" onclick="toggleTajweedDetail('L${i}')">
+        <div class="surah-num" style="font-size:20px;">${l.ar}</div>
+        <div class="surah-info">
+          <div class="surah-name">${l.name}</div>
+          <div class="surah-sub" id="Ldetail${i}" style="display:none;">${l.makhraj}</div>
+        </div>
+        <button onclick="event.stopPropagation(); speakArabic('${l.ar}')" style="background:none; border:none; font-size:18px; padding:6px;" aria-label="Hear pronunciation">🔊</button>
+      </div>
+    `).join('');
+  } else if(mode === 'harakat'){
+    el.innerHTML = TAJWEED_HARAKAT.map(h => `
+      <div class="ayah-block" style="margin-bottom:10px;">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+          <span style="font-size:26px; color:var(--gold);">${h.sym}</span>
+          <span class="surah-name">${h.name}</span>
+        </div>
+        <div class="dhikr-meaning">${h.desc}</div>
+      </div>
+    `).join('');
+  } else if(mode === 'rules'){
+    el.innerHTML = TAJWEED_RULES.map((r,i) => `
+      <div class="surah-row" onclick="toggleTajweedDetail('R${i}')">
+        <div class="prophet-icon" style="font-size:18px; display:flex; align-items:center; justify-content:center;">📏</div>
+        <div class="surah-info">
+          <div class="surah-name">${r.title}</div>
+          <div class="surah-sub" id="Rdetail${i}" style="display:none;">${r.body}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+function toggleTajweedDetail(key){
+  const el = document.getElementById((key[0]==='L' ? 'Ldetail' : 'Rdetail') + key.slice(1));
+  if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function speakArabic(text){
+  universalSpeak(text, 'ar-SA', () => {});
+}
+
+// ---------------- Practice & Compare (recite, no automated Tajweed checking) ----------------
+let reciteRendered = false;
+let recitedMediaRecorder = null;
+let recitedChunks = [];
+let recitedBlobUrl = null;
+
+function initRecitePractice(){
+  const sel = document.getElementById('reciteSurahSelect');
+  if(!SURAHS.length){
+    // borrow the same surah list already used by the Quran tab
+    loadSurahList().then(() => populateReciteSurahs());
+  } else {
+    populateReciteSurahs();
+  }
+}
+function populateReciteSurahs(){
+  const sel = document.getElementById('reciteSurahSelect');
+  sel.innerHTML = SURAHS.map(s => `<option value="${s.number}" data-ayahs="${s.numberOfAyahs}">${s.number}. ${s.englishName}</option>`).join('');
+}
+function onReciteSurahChange(){
+  const sel = document.getElementById('reciteSurahSelect');
+  const max = sel.selectedOptions[0]?.dataset.ayahs || 1;
+  document.getElementById('reciteAyahInput').max = max;
+}
+
+async function playReciteReference(){
+  const surah = document.getElementById('reciteSurahSelect').value;
+  const ayah = document.getElementById('reciteAyahInput').value || 1;
+  const statusEl = document.getElementById('reciteRefStatus');
+  statusEl.textContent = 'Loading…';
+  try{
+    const res = await fetch(`https://api.alquran.cloud/v1/ayah/${surah}:${ayah}/${currentReciter}`);
+    const json = await res.json();
+    const url = json.data.audio;
+    if(!url) throw new Error('no audio for this ayah');
+    const audio = new Audio(url);
+    statusEl.textContent = `Playing ${RECITER_NAMES[currentReciter] || 'reciter'}…`;
+    audio.play();
+    audio.onended = () => { statusEl.textContent = ''; };
+  }catch(e){
+    statusEl.textContent = "Couldn't load that ayah's audio — check the surah/ayah number and your connection.";
+  }
+}
+
+async function toggleReciteRecording(){
+  const btn = document.getElementById('reciteRecordBtn');
+  const statusEl = document.getElementById('reciteRecordStatus');
+  if(recitedMediaRecorder && recitedMediaRecorder.state === 'recording'){
+    recitedMediaRecorder.stop();
+    return;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    statusEl.textContent = "Microphone recording isn't available on this device/browser.";
+    return;
+  }
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recitedChunks = [];
+    recitedMediaRecorder = new MediaRecorder(stream);
+    recitedMediaRecorder.ondataavailable = e => { if(e.data.size > 0) recitedChunks.push(e.data); };
+    recitedMediaRecorder.onstop = () => {
+      const blob = new Blob(recitedChunks, { type: 'audio/webm' });
+      if(recitedBlobUrl) URL.revokeObjectURL(recitedBlobUrl);
+      recitedBlobUrl = URL.createObjectURL(blob);
+      stream.getTracks().forEach(t => t.stop());
+      btn.textContent = '🎙️ Record Yourself';
+      statusEl.textContent = 'Recording saved — play it back below and compare.';
+      document.getElementById('recitePlaybackBox').style.display = 'block';
+    };
+    recitedMediaRecorder.start();
+    btn.textContent = '⏹ Stop Recording';
+    statusEl.textContent = 'Recording… recite the ayah now.';
+    document.getElementById('recitePlaybackBox').style.display = 'none';
+  }catch(e){
+    statusEl.textContent = "Couldn't access the microphone — please allow microphone permission and try again.";
+  }
+}
+function playReciteRecording(){
+  if(!recitedBlobUrl) return;
+  new Audio(recitedBlobUrl).play();
 }
 
 // ---------------- Zakat Calculator ----------------
