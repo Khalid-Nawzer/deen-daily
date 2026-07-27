@@ -271,6 +271,10 @@
   }
   .toggle-btn.on::after{left:24px;}
   .ai-key-box{margin-top:6px;}
+  .zakat-field{margin-bottom:14px;}
+  .zakat-field label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; font-weight:600;}
+  .zakat-field input{width:100%; padding:11px 13px; border-radius:12px; border:1px solid var(--glass-brd); background:rgba(255,255,255,.04); color:var(--text); font-size:14.5px;}
+  .zakat-field input:focus{outline:none; border-color:var(--gold);}
   .ai-key-box input{
     width:100%; background:var(--glass); border:1px solid var(--glass-brd); border-radius:12px; padding:12px 14px;
     color:var(--ink); font-size:13px; margin-top:8px; font-family:monospace;
@@ -719,6 +723,12 @@
     <div class="ai-key-note">Get a free key at aistudio.google.com/apikey — no card required for normal personal use. Stored only in this browser.</div>
   </div>
 
+  <div class="setting-row" style="display:block;">
+    <div><div class="setting-lbl">🎧 Offline Quran Audio</div><div class="setting-sub">Every recitation you listen to is automatically saved on this device, so replaying it later uses no data. Clear it anytime to free up space.</div></div>
+    <div id="offlineAudioSize" class="ai-key-note" style="margin-top:6px;">Checking storage used…</div>
+    <button class="gate-btn ghost" style="margin-top:10px;" onclick="clearOfflineAudio()">Clear offline audio cache</button>
+  </div>
+
   <button class="sheet-save" onclick="saveSettings()">Save settings</button>
   <button class="gate-btn ghost" style="margin-top:10px;" onclick="signOutUser()">Sign out</button>
 </div>
@@ -785,6 +795,8 @@
   </div>
 
   <div id="missedBox"></div>
+
+  <div id="ramadanCard" style="display:none;"></div>
 
   <div class="section-title">Today's Feed</div>
   <div id="homeFeed"></div>
@@ -994,6 +1006,26 @@
   </div>
 </div>
 
+<div id="page-zakat" class="page">
+  <div class="section-title">Zakat Calculator</div>
+  <div class="dhikr-meaning" style="margin-bottom:14px;">A simple estimate at 2.5% of wealth held for a full lunar year, above the Nisab threshold. Not a religious ruling — for anything unclear (mixed assets, business stock, etc.), please check with a knowledgeable source.</div>
+
+  <div class="ayah-block">
+    <div class="zakat-field"><label>Cash &amp; bank savings (LKR)</label><input type="number" id="zCash" inputmode="decimal" placeholder="0"></div>
+    <div class="zakat-field"><label>Gold value (LKR)</label><input type="number" id="zGold" inputmode="decimal" placeholder="0"></div>
+    <div class="zakat-field"><label>Silver value (LKR)</label><input type="number" id="zSilver" inputmode="decimal" placeholder="0"></div>
+    <div class="zakat-field"><label>Business stock / investments (LKR)</label><input type="number" id="zBiz" inputmode="decimal" placeholder="0"></div>
+    <div class="zakat-field"><label>Debts you owe right now (LKR)</label><input type="number" id="zDebt" inputmode="decimal" placeholder="0"></div>
+    <div class="zakat-field">
+      <label>Nisab threshold (LKR)</label>
+      <input type="number" id="zNisab" inputmode="decimal" placeholder="0">
+      <div class="ai-key-note">Nisab is traditionally 87.48g of gold or 612.36g of silver — whichever is lower. Check today's gold/silver price and multiply, then enter it here (this changes daily, so the app can't fill it in for you reliably).</div>
+    </div>
+    <button class="mushaf-play-btn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700; margin-top:6px;" onclick="calculateZakat()">Calculate Zakat</button>
+    <div id="zakatResult"></div>
+  </div>
+</div>
+
 <div id="page-more" class="page">
   <div class="section-title">More</div>
   <div class="feature-grid">
@@ -1020,6 +1052,10 @@
     <div class="feature-tile" onclick="goPage('mosques')">
       <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M4 21V9l5-4 5 4v12M14 21V9l3-2.5L20 9v12"/><path d="M9 21v-5h2v5"/></svg></div>
       <div class="feature-tile-lbl">Nearby Mosques</div>
+    </div>
+    <div class="feature-tile" onclick="goPage('zakat')">
+      <div class="feature-tile-ico"><svg viewBox="0 0 24 24" fill="none" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v2M12 15v2M9.5 15c0 1.1 1.1 2 2.5 2s2.5-.9 2.5-2-1-1.6-2.5-2-2.5-.9-2.5-2 1.1-2 2.5-2 2.5.9 2.5 2"/></svg></div>
+      <div class="feature-tile-lbl">Zakat Calculator</div>
     </div>
 
     <div class="feature-tile" onclick="openNotesSheet()">
@@ -1675,8 +1711,29 @@ function openSheet(){
   document.getElementById('displayNameInput').value = ME || '';
   document.getElementById('roomCodeSub').textContent = ROOM_CODE ? `${ROOM_CODE} · share this so your partner can join too` : '—';
   updateToggles();
+  updateOfflineAudioSize();
   document.getElementById('settingsSheet').classList.add('open');
   document.getElementById('sheetBackdrop').classList.add('open');
+}
+async function updateOfflineAudioSize(){
+  const el = document.getElementById('offlineAudioSize');
+  if(!el) return;
+  try{
+    if(navigator.storage && navigator.storage.estimate){
+      const est = await navigator.storage.estimate();
+      const mb = ((est.usage || 0) / (1024*1024)).toFixed(1);
+      el.textContent = `~${mb} MB of app storage used (recitations + app data combined).`;
+    } else {
+      el.textContent = '';
+    }
+  }catch(e){ el.textContent = ''; }
+}
+async function clearOfflineAudio(){
+  try{
+    await caches.delete('deen-daily-audio-v1');
+    updateOfflineAudioSize();
+    showBanner('Offline audio cache cleared 🎧');
+  }catch(e){}
 }
 function closeSheet(){
   document.getElementById('settingsSheet').classList.remove('open');
@@ -1847,7 +1904,7 @@ function goPage(name){
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
-  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','mosques','more'];
+  const moreSubPages = ['adhkar','hadith','asma','prophets','calendar','mosques','zakat','more'];
   const navTarget = moreSubPages.includes(name) ? 'more' : name;
   document.getElementById('nav-'+navTarget)?.classList.add('active');
   window.scrollTo(0,0);
@@ -2418,6 +2475,36 @@ function stopProphetSpeech(){
   if(btn) btn.textContent = '▶ Listen to the story';
 }
 
+// ---------------- Zakat Calculator ----------------
+function calculateZakat(){
+  const val = id => Number(document.getElementById(id).value) || 0;
+  const cash = val('zCash'), gold = val('zGold'), silver = val('zSilver'), biz = val('zBiz'), debt = val('zDebt'), nisab = val('zNisab');
+
+  const total = cash + gold + silver + biz;
+  const net = Math.max(0, total - debt);
+  const resultEl = document.getElementById('zakatResult');
+
+  if(!nisab){
+    resultEl.innerHTML = `<div class="dhikr-meaning" style="padding:16px 10px; text-align:center; margin-top:12px;">Please enter today's Nisab value first (see the note above) so we can check if Zakat is due.</div>`;
+    return;
+  }
+  if(net < nisab){
+    resultEl.innerHTML = `
+      <div class="ayah-block" style="text-align:center; margin-top:12px;">
+        <div class="surah-name">Below Nisab</div>
+        <div class="dhikr-meaning" style="margin-top:6px;">Your net wealth (LKR ${net.toLocaleString()}) is below the Nisab threshold, so Zakat isn't due this year.</div>
+      </div>`;
+    return;
+  }
+  const zakatDue = net * 0.025;
+  resultEl.innerHTML = `
+    <div class="ayah-block" style="text-align:center; margin-top:12px;">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:4px;">Zakat Due (2.5%)</div>
+      <div class="hero-name" style="font-size:28px;">LKR ${zakatDue.toLocaleString(undefined,{maximumFractionDigits:2})}</div>
+      <div class="prayer-time" style="margin-top:6px; font-size:13px;">Net zakatable wealth: LKR ${net.toLocaleString()}</div>
+    </div>`;
+}
+
 // ---------------- Nearby Mosques (OpenStreetMap Overpass — free, no API key) ----------------
 function haversineKm(lat1, lng1, lat2, lng2){
   const R = 6371;
@@ -2563,10 +2650,87 @@ async function updateHomeHijriPreview(){
     const h = await fetchHijriToday();
     const el = document.getElementById('homeHijriDate');
     if(el) el.textContent = `${h.hijri.day} ${h.hijri.month.en} ${h.hijri.year} AH`;
+    checkRamadanMode(h);
   }catch(e){
     const el = document.getElementById('homeHijriDate');
     if(el) el.textContent = 'Islamic Calendar';
   }
+}
+
+// ---------------- Ramadan Mode ----------------
+let ramadanTimerHandle = null;
+function checkRamadanMode(hijriData){
+  const card = document.getElementById('ramadanCard');
+  if(!card) return;
+  if(hijriData.hijri.month.number !== 9){
+    card.style.display = 'none';
+    if(ramadanTimerHandle) clearInterval(ramadanTimerHandle);
+    return;
+  }
+  card.style.display = 'block';
+  window.__ramadanHijriYear = hijriData.hijri.year;
+  renderRamadanCard();
+  if(ramadanTimerHandle) clearInterval(ramadanTimerHandle);
+  ramadanTimerHandle = setInterval(renderRamadanCard, 30000);
+}
+
+function parseHMtoMinutes(hm){
+  const [h,m] = (hm || '00:00').split(':').map(Number);
+  return h*60 + (m||0);
+}
+
+function renderRamadanCard(){
+  const card = document.getElementById('ramadanCard');
+  if(!card || card.style.display === 'none') return;
+  const fajr = PRAYERS.find(p => p.id === 'fajr');
+  const maghrib = PRAYERS.find(p => p.id === 'maghrib');
+  if(!fajr || !maghrib || fajr.time === '—' || maghrib.time === '—') return;
+
+  const now = slNow();
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const suhoorMin = parseHMtoMinutes(fajr.time);
+  const iftarMin = parseHMtoMinutes(maghrib.time);
+
+  let label, diffMin;
+  if(nowMin < suhoorMin){
+    label = 'Suhoor ends in'; diffMin = suhoorMin - nowMin;
+  } else if(nowMin < iftarMin){
+    label = 'Iftar in'; diffMin = iftarMin - nowMin;
+  } else {
+    label = 'Suhoor ends in'; diffMin = (1440 - nowMin) + suhoorMin; // tomorrow
+  }
+  const hh = Math.floor(diffMin/60), mm = diffMin%60;
+
+  const hijriYear = window.__ramadanHijriYear || '';
+  const trKey = `deen_taraweeh_${hijriYear}`;
+  const taraweehDone = JSON.parse(localStorage.getItem(trKey) || '[]');
+  const nightsCount = taraweehDone.length;
+
+  card.innerHTML = `
+    <div class="section-title">🌙 Ramadan Mubarak</div>
+    <div class="ayah-block" style="text-align:center; margin-bottom:14px;">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:4px;">${label}</div>
+      <div class="hero-name" style="font-size:30px;">${hh}h ${mm}m</div>
+      <div class="prayer-time" style="margin-top:6px; font-size:14px;">Suhoor ends ${fajr.time} · Iftar ${maghrib.time}</div>
+    </div>
+    <div class="ayah-block">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <div class="surah-name">🕌 Taraweeh Tracker</div>
+        <div style="color:var(--gold); font-weight:700;">${nightsCount}/30 nights</div>
+      </div>
+      <button class="mushaf-play-btn" style="width:100%; border-radius:14px; font-size:13.5px; font-weight:700;" onclick="markTaraweehTonight()">${taraweehDone.includes(getSLDateKey()) ? '✓ Tonight marked' : "Mark Tonight's Taraweeh"}</button>
+    </div>
+  `;
+}
+
+function markTaraweehTonight(){
+  const hijriYear = window.__ramadanHijriYear || '';
+  const trKey = `deen_taraweeh_${hijriYear}`;
+  const done = JSON.parse(localStorage.getItem(trKey) || '[]');
+  const today = getSLDateKey();
+  if(!done.includes(today)) done.push(today);
+  localStorage.setItem(trKey, JSON.stringify(done));
+  renderRamadanCard();
 }
 
 // A lightweight, no-server "feed" — 3 cards that automatically rotate every
@@ -3176,7 +3340,7 @@ async function scheduleNativeAzanNotifications(){
       const now = new Date();
       const fireAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
       if(fireAt < now) fireAt.setDate(fireAt.getDate() + 1);
-      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name}`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel-v3' };
+      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name} 🔕 Consider silencing your phone`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel-v3' };
     });
     await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
     await LocalNotifications.schedule({ notifications });
