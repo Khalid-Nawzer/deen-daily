@@ -275,6 +275,7 @@
   .zakat-field label{display:block; font-size:12.5px; color:var(--muted); margin-bottom:5px; font-weight:600;}
   .zakat-field input{width:100%; padding:11px 13px; border-radius:12px; border:1px solid var(--glass-brd); background:rgba(255,255,255,.04); color:var(--text); font-size:14.5px;}
   .zakat-field input:focus{outline:none; border-color:var(--gold);}
+  .asma-playing{background:var(--gold-dim); border-radius:12px; padding-left:8px; padding-right:8px;}
   .ai-key-box input{
     width:100%; background:var(--glass); border:1px solid var(--glass-brd); border-radius:12px; padding:12px 14px;
     color:var(--ink); font-size:13px; margin-top:8px; font-family:monospace;
@@ -980,6 +981,13 @@
     <button class="qtab active" id="atab-arabic" onclick="switchAsmaMode('arabic')">🕌 Arabic</button>
     <button class="qtab" id="atab-english" onclick="switchAsmaMode('english')">🌍 + English</button>
     <button class="qtab" id="atab-tamil" onclick="switchAsmaMode('tamil')">🇱🇰 + Tamil</button>
+  </div>
+  <div class="ayah-block" style="margin-bottom:14px;">
+    <div id="asmaFullPlayStatus" style="text-align:center; font-size:13px; color:var(--muted); margin-bottom:10px;"></div>
+    <div style="display:flex; gap:10px;">
+      <button class="mushaf-play-btn" id="asmaFullPlayBtn" style="flex:1; border-radius:14px; font-size:13px; font-weight:700;" onclick="toggleFullPlayAsma(false)">▶️ Play All (with meaning)</button>
+      <button class="mushaf-play-btn" id="asmaArabicPlayBtn" style="flex:1; border-radius:14px; font-size:13px; font-weight:700; background:linear-gradient(135deg,#2c3e2f,#1a2b1c); border:1px solid var(--gold);" onclick="toggleFullPlayAsma(true)">🕋 Arabic Only</button>
+    </div>
   </div>
   <div id="asmaGrid"></div>
 </div>
@@ -1942,6 +1950,7 @@ function stopHadithSpeech(){
 
 // ---------------- navigation ----------------
 function goPage(name){
+  if(name !== 'asma' && typeof stopFullPlayAsma === 'function') stopFullPlayAsma();
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
   document.querySelectorAll('.nav-btn').forEach(l => l.classList.remove('active'));
@@ -2210,6 +2219,7 @@ let asmaMode = 'arabic';
 let asmaTamil = JSON.parse(localStorage.getItem('deen_asma_tamil') || 'null'); // array of 99 strings, or null if not yet translated
 
 function switchAsmaMode(mode){
+  stopFullPlayAsma();
   asmaMode = mode;
   document.getElementById('atab-arabic').classList.toggle('active', mode==='arabic');
   document.getElementById('atab-english').classList.toggle('active', mode==='english');
@@ -2234,7 +2244,7 @@ function renderAsmaList(){
     el.innerHTML = `
       <div class="dhikr-meaning" style="margin-bottom:16px;">The most beautiful names of Allah, in clear large Arabic script. Tap ▶ to hear it recited.</div>
       ${ASMA_UL_HUSNA.map((n,i) => `
-        <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:16px 0;">
+        <div class="dhikr-item" id="asmaRow${i}" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:16px 0;">
           <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
           <div class="dhikr-arabic" style="flex:1; text-align:right; font-size:32px; margin:0;">${n.ar}</div>
           <button class="mushaf-play-btn" style="flex-shrink:0;" onclick="playAsmaName(${i}, this)">▶</button>
@@ -2248,7 +2258,7 @@ function renderAsmaList(){
     el.innerHTML = `
       <div class="dhikr-meaning" style="margin-bottom:16px;">Arabic with English transliteration and meaning. Tap ▶ to hear the name and meaning read aloud.</div>
       ${ASMA_UL_HUSNA.map((n,i) => `
-        <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
+        <div class="dhikr-item" id="asmaRow${i}" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
           <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
           <div style="flex:1;">
             <div class="dhikr-arabic" style="text-align:right; margin-bottom:4px;">${n.ar}</div>
@@ -2266,7 +2276,7 @@ function renderAsmaList(){
   el.innerHTML = `
     <div class="dhikr-meaning" style="margin-bottom:16px;">Arabic with Tamil meaning. <span style="color:var(--gold-soft);">✨ AI-assisted translation — please verify with a Tamil-speaking scholar for precise wording.</span></div>
     ${ASMA_UL_HUSNA.map((n,i) => `
-      <div class="dhikr-item" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
+      <div class="dhikr-item" id="asmaRow${i}" style="display:flex; align-items:center; gap:12px; border-top:1px solid var(--line); padding:14px 0;">
         <div class="surah-num" style="flex-shrink:0;">${i+1}</div>
         <div style="flex:1;">
           <div class="dhikr-arabic" style="text-align:right; margin-bottom:4px;">${n.ar}</div>
@@ -2303,6 +2313,7 @@ function playAsmaName(i, btn){
     document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
     return;
   }
+  stopFullPlayAsma();
   const n = ASMA_UL_HUSNA[i];
   let text, lang;
   if(asmaMode === 'arabic'){
@@ -2318,6 +2329,88 @@ function playAsmaName(i, btn){
   document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
   btn.textContent = '⏸';
   universalSpeak(text, lang, () => { btn.textContent = '▶'; });
+}
+
+// ---------------- Asma Full Play (continuous, radio-style: Arabic name → meaning) ----------------
+let asmaFullPlayActive = false;
+let asmaFullPlayArabicOnly = false;
+let asmaFullPlayIndex = 0;
+
+function toggleFullPlayAsma(arabicOnly){
+  if(asmaFullPlayActive){ stopFullPlayAsma(); return; }
+  universalStop();
+  document.querySelectorAll('#asmaGrid .mushaf-play-btn').forEach(b => b.textContent = '▶');
+  asmaFullPlayActive = true;
+  asmaFullPlayArabicOnly = arabicOnly;
+  asmaFullPlayIndex = 0;
+  updateFullPlayButtonsUI();
+  playAsmaFullPlayStep();
+}
+
+function stopFullPlayAsma(){
+  if(!asmaFullPlayActive) return;
+  asmaFullPlayActive = false;
+  universalStop();
+  document.querySelectorAll('#asmaGrid .asma-playing').forEach(el => el.classList.remove('asma-playing'));
+  document.getElementById('asmaFullPlayStatus').textContent = '';
+  updateFullPlayButtonsUI();
+}
+
+function updateFullPlayButtonsUI(){
+  const bothBtn = document.getElementById('asmaFullPlayBtn');
+  const arBtn = document.getElementById('asmaArabicPlayBtn');
+  if(!bothBtn || !arBtn) return;
+  if(!asmaFullPlayActive){
+    bothBtn.textContent = '▶️ Play All (with meaning)';
+    arBtn.textContent = '🕋 Arabic Only';
+  } else if(asmaFullPlayArabicOnly){
+    bothBtn.textContent = '▶️ Play All (with meaning)';
+    arBtn.textContent = '⏸ Stop';
+  } else {
+    bothBtn.textContent = '⏸ Stop';
+    arBtn.textContent = '🕋 Arabic Only';
+  }
+}
+
+function playAsmaFullPlayStep(){
+  if(!asmaFullPlayActive) return;
+  if(asmaFullPlayIndex >= 99){ stopFullPlayAsma(); return; }
+
+  const i = asmaFullPlayIndex;
+  const n = ASMA_UL_HUSNA[i];
+
+  document.querySelectorAll('#asmaGrid .asma-playing').forEach(el => el.classList.remove('asma-playing'));
+  const rowEl = document.getElementById('asmaRow' + i);
+  if(rowEl){
+    rowEl.classList.add('asma-playing');
+    rowEl.scrollIntoView({ behavior:'smooth', block:'center' });
+  }
+  document.getElementById('asmaFullPlayStatus').textContent = `Playing ${i+1} of 99 — ${n.tr}`;
+
+  const advance = () => {
+    if(!asmaFullPlayActive) return;
+    asmaFullPlayIndex++;
+    playAsmaFullPlayStep();
+  };
+
+  if(asmaFullPlayArabicOnly){
+    universalSpeak(n.ar, 'ar-SA', advance);
+    return;
+  }
+
+  // radio-style: recite the Arabic name, then its meaning in the currently selected language
+  universalSpeak(n.ar, 'ar-SA', () => {
+    if(!asmaFullPlayActive) return;
+    let meaningText, meaningLang;
+    if(asmaMode === 'tamil'){
+      meaningText = (asmaTamil && asmaTamil[i]) || n.en;
+      meaningLang = 'ta-IN';
+    } else {
+      meaningText = `${n.tr}. ${n.en}`;
+      meaningLang = 'en-US';
+    }
+    universalSpeak(meaningText, meaningLang, advance);
+  });
 }
 
 // ---------------- Stories of the Prophets (symbolic art only — no depictions) ----------------
