@@ -3668,15 +3668,57 @@ async function scheduleNativeAzanNotifications(){
     await LocalNotifications.createChannel({
       id: 'azan-channel-v3', name: 'Azan', importance: 5, sound: 'azan.mp3', visibility: 1
     });
-    const notifications = PRAYERS.map((p, i) => {
-      const [hh, mm] = (p.time || '00:00').split(':').map(Number);
-      const now = new Date();
-      const fireAt = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, mm, 0);
-      if(fireAt < now) fireAt.setDate(fireAt.getDate() + 1);
-      return { id: i + 1, title: 'Deen Daily', body: `It's time for ${p.name} 🔕 Consider silencing your phone`, schedule: { at: fireAt, every: 'day' }, sound: 'azan.mp3', channelId: 'azan-channel-v3' };
-    });
-    await LocalNotifications.cancel({ notifications: notifications.map(n => ({ id: n.id })) });
-    await LocalNotifications.schedule({ notifications });
+
+    const DAYS_AHEAD = 30;
+    const now = new Date();
+
+    // Prayer times shift by a minute or two every day, so a single repeating
+    // "every day at the same clock time" alarm goes stale fast. Instead, pull
+    // the real timings for each of the next 30 days and schedule them
+    // individually — refreshed every time the app opens, so it never drifts.
+    const monthsNeeded = new Set();
+    for(let d = 0; d <= DAYS_AHEAD; d++){
+      const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+      monthsNeeded.add(`${dt.getFullYear()}-${dt.getMonth()+1}`);
+    }
+    const dayTimings = {}; // 'YYYY-MM-DD' -> { Fajr, Dhuhr, Asr, Maghrib, Isha }
+    for(const key of monthsNeeded){
+      const [y, m] = key.split('-').map(Number);
+      const res = await fetch(`https://api.aladhan.com/v1/calendar/${y}/${m}?latitude=${LAT}&longitude=${LNG}&method=1`);
+      const json = await res.json();
+      (json.data || []).forEach(dayObj => {
+        const [dd, mm, yyyy] = dayObj.date.gregorian.date.split('-');
+        dayTimings[`${yyyy}-${mm}-${dd}`] = dayObj.timings;
+      });
+    }
+
+    // clear the previous batch first so we don't pile up duplicates on every app open
+    const oldIds = [];
+    for(let d = 0; d <= DAYS_AHEAD; d++){ for(let p = 0; p < 5; p++){ oldIds.push({ id: 1000 + d*10 + p }); } }
+    await LocalNotifications.cancel({ notifications: oldIds });
+
+    const notifications = [];
+    for(let d = 0; d <= DAYS_AHEAD; d++){
+      const dt = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
+      const key = `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,'0')}-${String(dt.getDate()).padStart(2,'0')}`;
+      const timings = dayTimings[key];
+      if(!timings) continue;
+      PRAYERS.forEach((p, pi) => {
+        const raw = (timings[p.apiKey] || '00:00').split(' ')[0]; // strip any "(+05:30)" suffix
+        const [hh, mm] = raw.split(':').map(Number);
+        const fireAt = new Date(dt.getFullYear(), dt.getMonth(), dt.getDate(), hh, mm, 0);
+        if(fireAt <= now) return; // don't schedule times already passed today
+        notifications.push({
+          id: 1000 + d*10 + pi,
+          title: 'Deen Daily',
+          body: `It's time for ${p.name} 🔕 Consider silencing your phone`,
+          schedule: { at: fireAt },
+          sound: 'azan.mp3',
+          channelId: 'azan-channel-v3'
+        });
+      });
+    }
+    if(notifications.length) await LocalNotifications.schedule({ notifications });
   }catch(e){ console.error('native azan schedule failed', e); }
 }
 
@@ -4164,6 +4206,17 @@ fetchPrayerTimes();
 updateHomeHijriPreview();
 renderHomeFeed();
 updateToggles();
+
+// Fixes notifications not properly bringing the app to the Home screen when tapped
+if(window.Capacitor && Capacitor.isNativePlatform()){
+  try{
+    const { LocalNotifications } = Capacitor.Plugins;
+    LocalNotifications.addListener('localNotificationActionPerformed', () => {
+      goPage('home');
+      fetchPrayerTimes();
+    });
+  }catch(e){ console.error('notification tap listener failed', e); }
+}
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', ()=> navigator.serviceWorker.register('sw.js'));
