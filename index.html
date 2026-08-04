@@ -10,36 +10,37 @@
 <link rel="icon" href="icon-192.png">
 <style>
   /* Critical splash — inlined so it paints before fonts/Firebase/anything else loads */
-  html,body{background:#070F18; margin:0;}
+  html,body{background:#000; margin:0;}
   #bootSplash{
-    position:fixed; inset:0; z-index:9999; background:radial-gradient(circle at 50% 35%, #14283C 0%, #070F18 70%);
+    position:fixed; inset:0; z-index:9999; background:#000;
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     transition:opacity .5s ease, visibility .5s ease;
   }
   #bootSplash.hide{opacity:0; visibility:hidden; pointer-events:none;}
-  .boot-moon{
-    font-size:56px; line-height:1;
-    filter:drop-shadow(0 0 18px rgba(212,175,55,.55));
-    animation:bootFloat 2.4s ease-in-out infinite;
+  .boot-bismillah{
+    font-family:'Amiri',serif; font-size:52px; color:#F4EFE4; line-height:1.3; text-align:center;
+    padding:0 24px; opacity:0;
+    text-shadow:0 0 24px rgba(212,175,55,.45), 0 0 46px rgba(212,175,55,.2);
+    animation:bootBismillahIn 1.6s ease .15s forwards, bootBismillahGlow 3.6s ease-in-out 1.8s infinite;
   }
-  @keyframes bootFloat{
-    0%,100%{transform:translateY(0) scale(1);}
-    50%{transform:translateY(-10px) scale(1.06);}
+  @keyframes bootBismillahIn{
+    0%{opacity:0; transform:scale(.9) translateY(8px); filter:blur(6px);}
+    100%{opacity:1; transform:scale(1) translateY(0); filter:blur(0);}
+  }
+  @keyframes bootBismillahGlow{
+    0%,100%{text-shadow:0 0 24px rgba(212,175,55,.45), 0 0 46px rgba(212,175,55,.2);}
+    50%{text-shadow:0 0 34px rgba(212,175,55,.7), 0 0 60px rgba(212,175,55,.35);}
   }
   .boot-title{
-    font-family:Georgia,serif; color:#F4EFE4; font-size:22px; letter-spacing:.5px;
-    margin-top:18px; opacity:0; animation:bootFadeIn .8s ease .3s forwards;
+    font-family:Georgia,serif; color:#D4AF37; font-size:20px; font-weight:700; letter-spacing:3px; text-transform:uppercase;
+    margin-top:34px; opacity:0; animation:bootFadeIn .8s ease 1.1s forwards;
+    display:flex; align-items:center; gap:10px;
   }
-  .boot-dots{display:flex; gap:6px; margin-top:22px;}
-  .boot-dots span{
-    width:7px; height:7px; border-radius:50%; background:#D4AF37; opacity:.35;
-    animation:bootDot 1.2s ease-in-out infinite;
-  }
-  .boot-dots span:nth-child(2){animation-delay:.15s;}
-  .boot-dots span:nth-child(3){animation-delay:.3s;}
-  @keyframes bootDot{
-    0%,80%,100%{opacity:.25; transform:scale(.85);}
-    40%{opacity:1; transform:scale(1.15);}
+  .boot-title .diamond{font-size:12px; transform:rotate(45deg); display:inline-block;}
+  .boot-status{
+    margin-top:20px; padding:8px 18px; border-radius:20px; background:rgba(255,255,255,.06); border:1px solid rgba(212,175,55,.25);
+    color:#9FB3AA; font-family:'Inter',sans-serif; font-size:12.5px; letter-spacing:.3px;
+    opacity:0; animation:bootFadeIn .8s ease 1.4s forwards;
   }
   @keyframes bootFadeIn{ to{opacity:1;} }
 </style>
@@ -559,45 +560,14 @@
   .qibla-deg{font-family:'Poppins',sans-serif; font-size:26px; color:var(--gold-soft); font-weight:700; margin-top:4px;}
   .qibla-enable-btn{margin-top:16px;}
 
-  /* ---------- boot splash ---------- */
-  #bootSplash{
-    position:fixed; inset:0; z-index:999; display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:18px;
-    background:radial-gradient(circle at 50% 35%, #16324a, var(--bg-0) 70%);
-    transition:opacity .5s ease, visibility .5s ease;
-  }
-  #bootSplash.hide{opacity:0; visibility:hidden; pointer-events:none;}
-  .splash-moon{
-    font-size:56px; animation:splash-float 2.6s ease-in-out infinite, splash-glow 2.6s ease-in-out infinite;
-  }
-  @keyframes splash-float{
-    0%,100%{ transform:translateY(0) rotate(-4deg); }
-    50%{ transform:translateY(-10px) rotate(4deg); }
-  }
-  @keyframes splash-glow{
-    0%,100%{ filter:drop-shadow(0 0 6px rgba(212,175,55,.35)); }
-    50%{ filter:drop-shadow(0 0 22px rgba(212,175,55,.75)); }
-  }
-  .splash-title{font-family:'Amiri',serif; font-size:24px; color:var(--ink); letter-spacing:.5px;}
-  .splash-dots{display:flex; gap:7px;}
-  .splash-dot{
-    width:7px; height:7px; border-radius:50%; background:var(--gold);
-    animation:splash-bounce 1.2s ease-in-out infinite;
-  }
-  .splash-dot:nth-child(2){animation-delay:.15s;}
-  .splash-dot:nth-child(3){animation-delay:.3s;}
-  @keyframes splash-bounce{
-    0%,80%,100%{ transform:scale(.6); opacity:.4; }
-    40%{ transform:scale(1); opacity:1; }
-  }
 </style>
 </head>
 <body>
 
 <div id="bootSplash">
-  <div class="boot-moon">🌙</div>
-  <div class="boot-title">Deen Daily</div>
-  <div class="boot-dots"><span></span><span></span><span></span></div>
+  <div class="boot-bismillah">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+  <div class="boot-title"><span class="diamond">◆</span> Deen Daily <span class="diamond">◆</span></div>
+  <div class="boot-status" id="bootStatus">Loading your daily deen…</div>
 </div>
 
 <!-- ============ AUTH GATE ============ -->
@@ -1325,9 +1295,18 @@ function slNow(){
 }
 
 // ================= AUTH =================
+const BOOT_STATUS_MESSAGES = ['Loading your daily deen…', 'Preparing prayer times…', 'Almost there…'];
+let bootStatusIdx = 0;
+let bootStatusInterval = setInterval(() => {
+  bootStatusIdx = (bootStatusIdx + 1) % BOOT_STATUS_MESSAGES.length;
+  const el = document.getElementById('bootStatus');
+  if(el) el.textContent = BOOT_STATUS_MESSAGES[bootStatusIdx];
+}, 1400);
+
 function showGate(id){
   const splash = document.getElementById('bootSplash');
   if(splash) splash.classList.add('hide');
+  clearInterval(bootStatusInterval);
 
   ['gateAuth','gateRoom','gateWaiting'].forEach(g => {
     document.getElementById(g).style.display = (g===id) ? 'flex' : 'none';
