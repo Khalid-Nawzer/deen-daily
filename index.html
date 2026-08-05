@@ -3866,8 +3866,16 @@ function isTtsPlaying(){
   return ('speechSynthesis' in window) && speechSynthesis.speaking;
 }
 
-async function scheduleNativeAzanNotifications(){
+async function scheduleNativeAzanNotifications(force){
   if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+
+  // The full reschedule below fetches a month of prayer times and rewrites
+  // ~150 native alarms one by one — heavy to redo on every single app open.
+  // Once it succeeds for a given day, skip it until the next day (or until
+  // force=true is passed, e.g. after the user changes location).
+  const today = new Date().toDateString();
+  if(!force && localStorage.getItem('azanScheduledDate') === today) return;
+
   const { LocalNotifications, AzanAlarm } = Capacitor.Plugins;
   try{
     const perm = await LocalNotifications.requestPermissions();
@@ -3891,7 +3899,12 @@ async function scheduleNativeAzanNotifications(){
     const dayTimings = {}; // 'YYYY-MM-DD' -> { Fajr, Dhuhr, Asr, Maghrib, Isha }
     for(const key of monthsNeeded){
       const [y, m] = key.split('-').map(Number);
-      const res = await fetch(`https://api.aladhan.com/v1/calendar/${y}/${m}?latitude=${LAT}&longitude=${LNG}&method=1`);
+      const ctrl = new AbortController();
+      const timeoutId = setTimeout(() => ctrl.abort(), 8000);
+      let res;
+      try{
+        res = await fetch(`https://api.aladhan.com/v1/calendar/${y}/${m}?latitude=${LAT}&longitude=${LNG}&method=1`, { signal: ctrl.signal });
+      }finally{ clearTimeout(timeoutId); }
       const json = await res.json();
       (json.data || []).forEach(dayObj => {
         const [dd, mm, yyyy] = dayObj.date.gregorian.date.split('-');
@@ -3939,6 +3952,7 @@ async function scheduleNativeAzanNotifications(){
       if(alarmItems.length) await AzanAlarm.scheduleBatch({ items: alarmItems });
       maybeShowReliabilitySetup();
     }
+    localStorage.setItem('azanScheduledDate', today);
   }catch(e){ console.error('native azan schedule failed', e); }
 }
 
