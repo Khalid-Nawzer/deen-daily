@@ -673,6 +673,9 @@
     <div><div class="setting-lbl">🔊 Azan sound</div><div class="setting-sub">Play adhan audio at prayer time</div></div>
     <button class="toggle-btn" id="toggleSound" onclick="enableAzanSound()"></button>
   </div>
+  <div class="setting-row" onclick="openReliabilitySetup()" style="cursor:pointer;">
+    <div><div class="setting-lbl">🔋 Background reliability</div><div class="setting-sub">Fix azan not ringing when app is closed</div></div>
+  </div>
   <div class="setting-row">
     <div><div class="setting-lbl">📻 Radio mode</div><div class="setting-sub">Chime whenever an item gets checked off</div></div>
     <button class="toggle-btn" id="toggleRadio" onclick="toggleRadio()"></button>
@@ -1155,6 +1158,19 @@
   <div style="font-family:'Amiri',serif; font-size:34px; color:#D4AF37; margin-bottom:8px;" id="azanTitle"></div>
   <div style="color:#8FA6B4; font-size:14px; margin-bottom:32px;">It's time to pray</div>
   <button onclick="stopAzan()" style="background:linear-gradient(135deg,#D4AF37,#B98F2A); color:#151005; border:none; padding:13px 36px; border-radius:24px; font-weight:700; font-size:15px;">Stop</button>
+</div>
+
+<div id="reliabilitySetup" style="display:none; position:fixed; inset:0; background:rgba(7,15,24,.96); z-index:210; align-items:center; justify-content:center; padding:24px;">
+  <div style="max-width:360px; width:100%; background:#0F1B24; border:1px solid rgba(212,175,55,.25); border-radius:20px; padding:26px 22px; text-align:center;">
+    <div style="font-size:36px; margin-bottom:10px;">🔔</div>
+    <div style="font-family:'Amiri',serif; font-size:22px; color:#D4AF37; margin-bottom:10px;">Keep azan reliable</div>
+    <div style="color:#8FA6B4; font-size:13.5px; line-height:1.6; margin-bottom:22px;">
+      Some phones aggressively kill background alarms to save battery. Allow these two one-time permissions so the azan always rings, even when the app is closed.
+    </div>
+    <button onclick="reliabilityStep('battery')" style="width:100%; background:linear-gradient(135deg,#D4AF37,#B98F2A); color:#151005; border:none; padding:12px; border-radius:14px; font-weight:700; font-size:14px; margin-bottom:10px;">Allow background running</button>
+    <button onclick="reliabilityStep('autostart')" style="width:100%; background:transparent; color:#D4AF37; border:1px solid rgba(212,175,55,.4); padding:12px; border-radius:14px; font-weight:700; font-size:14px; margin-bottom:14px;">Enable auto-start</button>
+    <div onclick="closeReliabilitySetup()" style="color:#5C7A70; font-size:12.5px; padding:6px;">Skip for now</div>
+  </div>
 </div>
 
 <script>
@@ -3852,7 +3868,7 @@ function isTtsPlaying(){
 
 async function scheduleNativeAzanNotifications(){
   if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
-  const { LocalNotifications } = Capacitor.Plugins;
+  const { LocalNotifications, AzanAlarm } = Capacitor.Plugins;
   try{
     const perm = await LocalNotifications.requestPermissions();
     if(perm.display !== 'granted') return;
@@ -3902,7 +3918,7 @@ async function scheduleNativeAzanNotifications(){
         notifications.push({
           id: 1000 + d*10 + pi,
           title: 'Deen Daily',
-          body: `It's time for ${p.name} 🔕 Consider silencing your phone`,
+          body: `It's time for ${p.name}`,
           schedule: { at: fireAt },
           sound: 'azan.mp3',
           channelId: 'azan-channel-v3'
@@ -3910,7 +3926,56 @@ async function scheduleNativeAzanNotifications(){
       });
     }
     if(notifications.length) await LocalNotifications.schedule({ notifications });
+
+    // Real alarm-stream scheduling — this is what actually rings through
+    // silent/DND, unlike the notification above (which respects the phone's
+    // ringer setting no matter how high its "importance" is set).
+    if(AzanAlarm){
+      const oldAlarmIds = oldIds.map(o => o.id);
+      await AzanAlarm.cancelBatch({ ids: oldAlarmIds });
+      const alarmItems = notifications.map(n => ({
+        id: n.id, at: n.schedule.at.getTime(), title: n.body
+      }));
+      if(alarmItems.length) await AzanAlarm.scheduleBatch({ items: alarmItems });
+      maybeShowReliabilitySetup();
+    }
   }catch(e){ console.error('native azan schedule failed', e); }
+}
+
+// One-time (per device) nudge to fix background-kill issues on aggressive
+// OEM battery managers (Xiaomi/Oppo/Vivo/Huawei etc). Also re-openable
+// manually from Settings via openReliabilitySetup().
+async function maybeShowReliabilitySetup(){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  if(localStorage.getItem('reliabilitySetupDone') === '1') return;
+  const { AzanAlarm } = Capacitor.Plugins;
+  if(!AzanAlarm) return;
+  try{
+    const res = await AzanAlarm.isIgnoringBatteryOptimizations();
+    if(res && res.value){ localStorage.setItem('reliabilitySetupDone', '1'); return; }
+  }catch(e){}
+  openReliabilitySetup();
+}
+
+function openReliabilitySetup(){
+  const el = document.getElementById('reliabilitySetup');
+  if(el) el.style.display = 'flex';
+}
+
+function closeReliabilitySetup(){
+  const el = document.getElementById('reliabilitySetup');
+  if(el) el.style.display = 'none';
+  localStorage.setItem('reliabilitySetupDone', '1');
+}
+
+async function reliabilityStep(step){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  const { AzanAlarm } = Capacitor.Plugins;
+  if(!AzanAlarm) return;
+  try{
+    if(step === 'battery') await AzanAlarm.requestIgnoreBatteryOptimizations();
+    else if(step === 'autostart') await AzanAlarm.openAutoStartSettings();
+  }catch(e){ console.error('reliability step failed', e); }
 }
 
 async function scheduleDailyStoryNotification(){
