@@ -80,7 +80,12 @@ public class AzanRingActivity extends AppCompatActivity {
             AssetFileDescriptor afd = getResources().openRawResourceFd(R.raw.azan);
             player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
             afd.close();
-            player.setLooping(true);
+            player.setLooping(false);
+            player.setOnCompletionListener(mp -> {
+                // Azan finished playing on its own — stop vibration and close the screen automatically
+                stopSound();
+                finish();
+            });
             player.prepare();
             player.start();
         } catch (Exception ignored) { }
