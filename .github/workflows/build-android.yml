@@ -34,8 +34,26 @@ jobs:
           python3 -c "
           p = 'android/app/src/main/AndroidManifest.xml'
           c = open(p).read()
-          perms = '<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>\n<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>\n<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\n<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>\n<uses-permission android:name=\"android.permission.VIBRATE\"/>\n<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n'
+          perms = '<uses-permission android:name=\"android.permission.ACCESS_FINE_LOCATION\"/>\n<uses-permission android:name=\"android.permission.ACCESS_COARSE_LOCATION\"/>\n<uses-permission android:name=\"android.permission.SCHEDULE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.USE_EXACT_ALARM\"/>\n<uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\"/>\n<uses-permission android:name=\"android.permission.RECEIVE_BOOT_COMPLETED\"/>\n<uses-permission android:name=\"android.permission.VIBRATE\"/>\n<uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n<uses-permission android:name=\"android.permission.USE_FULL_SCREEN_INTENT\"/>\n'
           c = c.replace('<application', perms + '<application', 1)
+
+          # Register the AzanAlarmReceiver + AzanRingActivity so the alarm plugin can use them
+          comps = '<receiver android:name=\".AzanAlarmReceiver\" android:exported=\"false\"/>\n<activity android:name=\".AzanRingActivity\" android:exported=\"false\" android:launchMode=\"singleInstance\" android:excludeFromRecents=\"true\"/>\n'
+          c = c.replace('</application>', comps + '</application>', 1)
+          open(p,'w').write(c)
+          "
+      - name: Add native azan-alarm plugin sources and register plugin in MainActivity
+        run: |
+          PKG_DIR="android/app/src/main/java/com/khalidnawzer/deendaily"
+          cp native/AzanAlarmPlugin.java native/AzanAlarmReceiver.java native/AzanRingActivity.java "$PKG_DIR/"
+          python3 -c "
+          p = '$PKG_DIR/MainActivity.java'
+          c = open(p).read()
+          if 'registerPlugin(AzanAlarmPlugin.class)' not in c:
+              c = c.replace(
+                  'public class MainActivity extends BridgeActivity {}',
+                  'public class MainActivity extends BridgeActivity {\n  @Override\n  public void onCreate(android.os.Bundle savedInstanceState) {\n    registerPlugin(AzanAlarmPlugin.class);\n    super.onCreate(savedInstanceState);\n  }\n}'
+              )
           open(p,'w').write(c)
           "
       - run: npx cap sync android
