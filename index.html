@@ -1259,6 +1259,7 @@ async function fetchPrayerTimes(){
     scheduleNativeAzanNotifications();
     scheduleDailyStoryNotification();
     scheduleMotivationNotifications();
+    subscribeToFcm();
   }catch(e){
     const cached = JSON.parse(localStorage.getItem('deen_times_cache') || 'null');
     if(cached && cached.date === getSLDateKey()){
@@ -1691,6 +1692,54 @@ async function subscribeToPush(){
   }
 }
 
+// Native (Capacitor Android) equivalent of subscribeToPush() — web push's
+// PushManager API is unreliable inside an embedded WebView, so the native
+// build instead registers for a real FCM token, the delivery method actual
+// installed apps use, and saves it to Firestore so the backend can target it.
+let fcmListenersBound = false;
+async function subscribeToFcm(){
+  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+  const { PushNotifications, LocalNotifications } = Capacitor.Plugins;
+  if(!PushNotifications) return;
+  try{
+    let perm = await PushNotifications.checkPermissions();
+    if(perm.receive !== 'granted'){
+      perm = await PushNotifications.requestPermissions();
+    }
+    if(perm.receive !== 'granted') return;
+
+    if(!fcmListenersBound){
+      fcmListenersBound = true;
+      PushNotifications.addListener('registration', async (token) => {
+        if(MY_UID && token && token.value){
+          try{
+            await db.collection('users').doc(MY_UID).set({ fcmToken: token.value }, {merge:true});
+          }catch(e){ console.log('save fcm token failed', e); }
+        }
+      });
+      PushNotifications.addListener('registrationError', (err) => {
+        console.log('FCM registration failed', err);
+      });
+      // App is in foreground when this fires — FCM doesn't auto-show a
+      // system notification in that case, so surface it ourselves.
+      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
+        try{
+          await LocalNotifications.schedule({ notifications: [{
+            id: Math.floor(Math.random() * 1000000) + 500000,
+            title: notification.title || 'Deen Daily',
+            body: notification.body || '',
+            schedule: { at: new Date(Date.now() + 500) }
+          }]});
+        }catch(e){}
+      });
+    }
+
+    await PushNotifications.register();
+  }catch(e){
+    console.log('FCM subscribe failed', e);
+  }
+}
+
 // tells the server-side function to actually deliver a phone notification
 // to the partner, even if their app/tab is fully closed
 async function notifyPartner(title, body){
@@ -1725,7 +1774,7 @@ async function enableNotifs(){
     const { LocalNotifications } = Capacitor.Plugins;
     const perm = await LocalNotifications.requestPermissions();
     await updateToggles();
-    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); scheduleDailyStoryNotification(); scheduleMotivationNotifications(); }
+    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); scheduleDailyStoryNotification(); scheduleMotivationNotifications(); subscribeToFcm(); }
     return;
   }
   if(!('Notification' in window)) return;
