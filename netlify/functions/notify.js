@@ -4,7 +4,7 @@
 // Delivers a real push notification to the partner's phone — works even if
 // their app/tab is fully closed, as long as they have some connectivity.
 
-const { db, sendPush } = require('./_shared');
+const { db, deliverToUser } = require('./_shared');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
@@ -18,14 +18,12 @@ exports.handler = async (event) => {
     }
 
     const userDoc = await db.collection('users').doc(toUid).get();
-    const sub = userDoc.exists && userDoc.data().pushSubscription;
-
-    if (!sub) {
-      return { statusCode: 200, body: 'No subscription for this user' };
+    if (!userDoc.exists) {
+      return { statusCode: 200, body: 'No such user' };
     }
 
-    await sendPush(sub, { title: title || 'Deen Daily', body: body || '' });
-    return { statusCode: 200, body: 'sent' };
+    const sent = await deliverToUser(userDoc.data(), { title: title || 'Deen Daily', body: body || '' });
+    return { statusCode: 200, body: sent ? 'sent' : 'no registered device for this user' };
   } catch (err) {
     console.error('notify error', err);
     return { statusCode: 200, body: 'ok (see logs)' };
