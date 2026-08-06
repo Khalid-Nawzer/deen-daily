@@ -41,4 +41,34 @@ async function sendPush(sub, payload) {
   }
 }
 
-module.exports = { admin, db, sendPush };
+// Sends via Firebase Cloud Messaging — the reliable path for the native
+// Android app (unlike web push, which doesn't register properly inside an
+// embedded WebView). Uses the same service account already configured above.
+async function sendFcm(token, payload) {
+  try {
+    await admin.messaging().send({
+      token,
+      notification: { title: payload.title, body: payload.body }
+    });
+    return true;
+  } catch (err) {
+    console.error('sendFcm failed:', err.code || '', err.message || err);
+    return false;
+  }
+}
+
+// Delivers to whichever channel a user has registered — FCM token (native
+// app, preferred/reliable) or web-push subscription (browser PWA) — trying
+// both if both exist, so nobody silently misses a notification.
+async function deliverToUser(userData, payload) {
+  let delivered = false;
+  if (userData && userData.fcmToken) {
+    delivered = await sendFcm(userData.fcmToken, payload) || delivered;
+  }
+  if (userData && userData.pushSubscription) {
+    delivered = await sendPush(userData.pushSubscription, payload) || delivered;
+  }
+  return delivered;
+}
+
+module.exports = { admin, db, sendPush, sendFcm, deliverToUser };
