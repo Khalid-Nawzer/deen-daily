@@ -1168,8 +1168,9 @@
     <div style="font-size:36px; margin-bottom:10px;">🔔</div>
     <div style="font-family:'Amiri',serif; font-size:22px; color:#D4AF37; margin-bottom:10px;">Keep azan reliable</div>
     <div style="color:#8FA6B4; font-size:13.5px; line-height:1.6; margin-bottom:22px;">
-      Some phones aggressively kill background alarms to save battery. Allow these two one-time permissions so the azan always rings, even when the app is closed.
+      Some phones aggressively kill background alarms to save battery. Allow these one-time permissions so the azan always rings, exactly on time, even when the app is closed.
     </div>
+    <button onclick="reliabilityStep('exactalarm')" style="width:100%; background:linear-gradient(135deg,#D4AF37,#B98F2A); color:#151005; border:none; padding:12px; border-radius:14px; font-weight:700; font-size:14px; margin-bottom:10px;">Allow exact alarm timing</button>
     <button onclick="reliabilityStep('battery')" style="width:100%; background:linear-gradient(135deg,#D4AF37,#B98F2A); color:#151005; border:none; padding:12px; border-radius:14px; font-weight:700; font-size:14px; margin-bottom:10px;">Allow background running</button>
     <button onclick="reliabilityStep('autostart')" style="width:100%; background:transparent; color:#D4AF37; border:1px solid rgba(212,175,55,.4); padding:12px; border-radius:14px; font-weight:700; font-size:14px; margin-bottom:14px;">Enable auto-start</button>
     <div onclick="closeReliabilitySetup()" style="color:#5C7A70; font-size:12.5px; padding:6px;">Skip for now</div>
@@ -1201,6 +1202,12 @@ let GEMINI_KEY = localStorage.getItem('deen_gemini_key') || '';
 // works from inside the packaged native app (which runs from a local
 // bundle, not this origin), same pattern as the azan-cron pings.
 const DEEN_SITE_ORIGIN = 'https://clever-bunny-6ef61e.netlify.app';
+// Optional: set this to the same value as APP_SHARED_SECRET in Netlify's env
+// vars to add a basic abuse guard on ai.js/notify.js. Leave blank to skip —
+// both functions work fine either way. Note: since this ships in the app's
+// JS, it's not a real secret against a determined attacker, just a filter
+// against casual/automated scanning of the bare function URLs.
+const APP_SHARED_SECRET = '';
 function apiBase(){
   try{
     if(window.Capacitor && Capacitor.isNativePlatform()) return DEEN_SITE_ORIGIN;
@@ -1215,7 +1222,7 @@ function apiBase(){
 async function callAi(prompt){
   const res = await fetch(apiBase() + '/.netlify/functions/ai', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'x-app-secret': APP_SHARED_SECRET },
     body: JSON.stringify({ prompt })
   });
   const data = await res.json().catch(() => ({}));
@@ -1699,9 +1706,9 @@ async function subscribeToPush(){
 async function notifyPartner(title, body){
   if(!PARTNER_UID) return;
   try{
-    await fetch('/.netlify/functions/notify', {
+    await fetch(apiBase() + '/.netlify/functions/notify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'x-app-secret': APP_SHARED_SECRET },
       body: JSON.stringify({ toUid: PARTNER_UID, title, body })
     });
   }catch(e){ /* silent — in-app banner still covers the open-app case */ }
@@ -3968,8 +3975,9 @@ async function maybeShowReliabilitySetup(){
   const { AzanAlarm } = Capacitor.Plugins;
   if(!AzanAlarm) return;
   try{
-    const res = await AzanAlarm.isIgnoringBatteryOptimizations();
-    if(res && res.value){ localStorage.setItem('reliabilitySetupDone', '1'); return; }
+    const battery = await AzanAlarm.isIgnoringBatteryOptimizations();
+    const exact = AzanAlarm.canScheduleExactAlarms ? await AzanAlarm.canScheduleExactAlarms() : { value: true };
+    if(battery && battery.value && exact && exact.value){ localStorage.setItem('reliabilitySetupDone', '1'); return; }
   }catch(e){}
   openReliabilitySetup();
 }
@@ -4016,6 +4024,7 @@ async function reliabilityStep(step){
   try{
     if(step === 'battery') await AzanAlarm.requestIgnoreBatteryOptimizations();
     else if(step === 'autostart') await AzanAlarm.openAutoStartSettings();
+    else if(step === 'exactalarm') await AzanAlarm.openExactAlarmSettings();
   }catch(e){ console.error('reliability step failed', e); }
 }
 
