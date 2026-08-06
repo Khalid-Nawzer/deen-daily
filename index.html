@@ -676,6 +676,9 @@
   <div class="setting-row" onclick="openReliabilitySetup()" style="cursor:pointer;">
     <div><div class="setting-lbl">🔋 Background reliability</div><div class="setting-sub">Fix azan not ringing when app is closed</div></div>
   </div>
+  <div class="setting-row" onclick="testAzanNow()" style="cursor:pointer;">
+    <div><div class="setting-lbl">🧪 Test azan now</div><div class="setting-sub" id="testAzanStatus">Fires the real alarm in 10 seconds — close the app after tapping</div></div>
+  </div>
   <div class="setting-row">
     <div><div class="setting-lbl">📻 Radio mode</div><div class="setting-sub">Chime whenever an item gets checked off</div></div>
     <button class="toggle-btn" id="toggleRadio" onclick="toggleRadio()"></button>
@@ -1259,7 +1262,6 @@ async function fetchPrayerTimes(){
     scheduleNativeAzanNotifications();
     scheduleDailyStoryNotification();
     scheduleMotivationNotifications();
-    subscribeToFcm();
   }catch(e){
     const cached = JSON.parse(localStorage.getItem('deen_times_cache') || 'null');
     if(cached && cached.date === getSLDateKey()){
@@ -1692,54 +1694,6 @@ async function subscribeToPush(){
   }
 }
 
-// Native (Capacitor Android) equivalent of subscribeToPush() — web push's
-// PushManager API is unreliable inside an embedded WebView, so the native
-// build instead registers for a real FCM token, the delivery method actual
-// installed apps use, and saves it to Firestore so the backend can target it.
-let fcmListenersBound = false;
-async function subscribeToFcm(){
-  if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
-  const { PushNotifications, LocalNotifications } = Capacitor.Plugins;
-  if(!PushNotifications) return;
-  try{
-    let perm = await PushNotifications.checkPermissions();
-    if(perm.receive !== 'granted'){
-      perm = await PushNotifications.requestPermissions();
-    }
-    if(perm.receive !== 'granted') return;
-
-    if(!fcmListenersBound){
-      fcmListenersBound = true;
-      PushNotifications.addListener('registration', async (token) => {
-        if(MY_UID && token && token.value){
-          try{
-            await db.collection('users').doc(MY_UID).set({ fcmToken: token.value }, {merge:true});
-          }catch(e){ console.log('save fcm token failed', e); }
-        }
-      });
-      PushNotifications.addListener('registrationError', (err) => {
-        console.log('FCM registration failed', err);
-      });
-      // App is in foreground when this fires — FCM doesn't auto-show a
-      // system notification in that case, so surface it ourselves.
-      PushNotifications.addListener('pushNotificationReceived', async (notification) => {
-        try{
-          await LocalNotifications.schedule({ notifications: [{
-            id: Math.floor(Math.random() * 1000000) + 500000,
-            title: notification.title || 'Deen Daily',
-            body: notification.body || '',
-            schedule: { at: new Date(Date.now() + 500) }
-          }]});
-        }catch(e){}
-      });
-    }
-
-    await PushNotifications.register();
-  }catch(e){
-    console.log('FCM subscribe failed', e);
-  }
-}
-
 // tells the server-side function to actually deliver a phone notification
 // to the partner, even if their app/tab is fully closed
 async function notifyPartner(title, body){
@@ -1774,7 +1728,7 @@ async function enableNotifs(){
     const { LocalNotifications } = Capacitor.Plugins;
     const perm = await LocalNotifications.requestPermissions();
     await updateToggles();
-    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); scheduleDailyStoryNotification(); scheduleMotivationNotifications(); subscribeToFcm(); }
+    if(perm.display === 'granted'){ scheduleNativeAzanNotifications(); scheduleDailyStoryNotification(); scheduleMotivationNotifications(); }
     return;
   }
   if(!('Notification' in window)) return;
@@ -3933,7 +3887,7 @@ async function scheduleNativeAzanNotifications(force){
       id: 'azan-channel-v3', name: 'Azan', importance: 5, sound: 'azan.mp3', visibility: 1
     });
 
-    const DAYS_AHEAD = 30;
+    const DAYS_AHEAD = 7; // re-scheduled fresh every day anyway, so a week ahead is plenty and much lighter than 30 days worth of alarms
     const now = new Date();
 
     // Prayer times shift by a minute or two every day, so a single repeating
@@ -4025,6 +3979,30 @@ function openReliabilitySetup(){
   if(el) el.style.display = 'flex';
 }
 
+// Fires the real native alarm 10s out, bypassing prayer-time scheduling
+// entirely — so you can see immediately whether the alarm/loud-audio path
+// itself works, without waiting for real prayer time to test.
+async function testAzanNow(){
+  const statusEl = document.getElementById('testAzanStatus');
+  if(!(window.Capacitor && Capacitor.isNativePlatform())){
+    if(statusEl) statusEl.textContent = 'Only works in the installed app, not the browser';
+    return;
+  }
+  const { AzanAlarm } = Capacitor.Plugins;
+  if(!AzanAlarm){
+    if(statusEl) statusEl.textContent = 'AzanAlarm plugin not found — rebuild needed';
+    return;
+  }
+  try{
+    await AzanAlarm.scheduleBatch({ items: [{
+      id: 999999, at: Date.now() + 10000, title: 'Test Azan'
+    }]});
+    if(statusEl) statusEl.textContent = 'Scheduled! Close/lock the phone now — rings in 10s';
+  }catch(e){
+    if(statusEl) statusEl.textContent = 'Failed to schedule: ' + (e.message || e);
+  }
+}
+
 function closeReliabilitySetup(){
   const el = document.getElementById('reliabilitySetup');
   if(el) el.style.display = 'none';
@@ -4098,6 +4076,13 @@ const MOTIVATION_QUOTES = [
 
 async function scheduleMotivationNotifications(){
   if(!(window.Capacitor && Capacitor.isNativePlatform())) return;
+
+  // This used to rebuild ~180 native notifications (30 days x 6 slots/day)
+  // on every single app open with no caching at all — very heavy. Now it
+  // only redoes that work once per day, same pattern as the azan scheduler.
+  const today = new Date().toDateString();
+  if(localStorage.getItem('motivationScheduledDate') === today) return;
+
   const { LocalNotifications } = Capacitor.Plugins;
   try{
     const perm = await LocalNotifications.requestPermissions();
@@ -4107,11 +4092,11 @@ async function scheduleMotivationNotifications(){
     });
 
     const SLOT_HOURS = [10, 12, 15, 18, 19, 22]; // 10am, 12pm, 3pm, 6pm, 7pm, 10pm
-    const DAYS_AHEAD = 30; // pre-scheduled a month out, refreshed every time the app opens
+    const DAYS_AHEAD = 7; // re-scheduled fresh every day anyway, a week ahead is plenty
     const BASE_ID = 200;
     const now = new Date();
 
-    // clear the previous batch first so we don't pile up duplicates on every app open
+    // clear the previous batch first so we don't pile up duplicates
     const oldIds = [];
     for(let d = 0; d < DAYS_AHEAD; d++){
       for(let s = 0; s < SLOT_HOURS.length; s++){ oldIds.push({ id: BASE_ID + d*10 + s }); }
@@ -4136,6 +4121,7 @@ async function scheduleMotivationNotifications(){
       }
     }
     if(notifications.length) await LocalNotifications.schedule({ notifications });
+    localStorage.setItem('motivationScheduledDate', today);
   }catch(e){ console.error('motivation schedule failed', e); }
 }
 const DUA_LIBRARY = [
