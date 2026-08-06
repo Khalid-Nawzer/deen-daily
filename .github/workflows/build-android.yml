@@ -56,27 +56,6 @@ jobs:
               )
           open(p,'w').write(c)
           "
-      - name: Wire up Firebase Cloud Messaging (google-services.json + Gradle plugin)
-        run: |
-          cp native/google-services.json android/app/google-services.json
-          python3 -c "
-          p = 'android/build.gradle'
-          c = open(p).read()
-          if 'com.google.gms:google-services' not in c:
-              c = c.replace(
-                  \"dependencies {\",
-                  \"dependencies {\n        classpath 'com.google.gms:google-services:4.4.2'\",
-                  1
-              )
-          open(p,'w').write(c)
-          "
-          python3 -c "
-          p = 'android/app/build.gradle'
-          c = open(p).read()
-          if 'com.google.gms.google-services' not in c:
-              c += \"\napply plugin: 'com.google.gms.google-services'\n\"
-          open(p,'w').write(c)
-          "
       - run: npx cap sync android
       - run: |
           mkdir -p android/app/src/main/res/raw
