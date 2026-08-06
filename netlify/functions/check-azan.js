@@ -13,7 +13,7 @@
 //     this works even with the app fully closed, as long as there's some
 //     connectivity on the phone.
 
-const { db, sendPush } = require('./_shared');
+const { db, deliverToUser } = require('./_shared');
 
 const LAT = 6.9271, LNG = 79.8612; // Colombo, Sri Lanka
 const PRAYER_KEYS = ['Fajr', 'Dhuhr', 'Asr', 'Maghrib', 'Isha'];
@@ -56,11 +56,11 @@ async function sendOnTimeAzan(dateKey, timings, minutesNow) {
   if (due.length === 0) return [];
 
   const usersSnap = await db.collection('users').get();
-  const subs = usersSnap.docs.map(d => d.data().pushSubscription).filter(Boolean);
+  const userDatas = usersSnap.docs.map(d => d.data()).filter(u => u.pushSubscription || u.fcmToken);
 
   for (const prayer of due) {
     await Promise.all(
-      subs.map(sub => sendPush(sub, {
+      userDatas.map(u => deliverToUser(u, {
         title: `🕌 ${prayer} time`,
         body: `It's time for ${prayer} prayer in Sri Lanka.`
       }))
@@ -106,10 +106,11 @@ async function sendMissedReminders(dateKey, timings, minutesNow) {
         if (Date.now() - lastSent < REMINDER_GAP_MS) continue;
 
         const userDoc = await db.collection('users').doc(uid).get();
-        const sub = userDoc.exists && userDoc.data().pushSubscription;
-        if (!sub) continue;
+        if (!userDoc.exists) continue;
+        const userData = userDoc.data();
+        if (!userData.pushSubscription && !userData.fcmToken) continue;
 
-        const sent = await sendPush(sub, {
+        const sent = await deliverToUser(userData, {
           title: `${key} is still waiting 🤍`,
           body: `You haven't marked ${key} as prayed yet — every prayer carries its own reward. There's still time.`
         });
