@@ -4,11 +4,14 @@
 // Delivers a real push notification to the partner's phone — works even if
 // their app/tab is fully closed, as long as they have some connectivity.
 
-const { db, deliverToUser } = require('./_shared');
+const { db, deliverToUser, checkSharedSecret } = require('./_shared');
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method not allowed' };
+  }
+  if (!checkSharedSecret(event)) {
+    return { statusCode: 401, body: 'Unauthorized' };
   }
 
   try {
