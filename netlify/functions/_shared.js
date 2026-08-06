@@ -2,6 +2,20 @@
 const webpush = require('web-push');
 const admin = require('firebase-admin');
 
+// Optional, lightweight abuse guard: if APP_SHARED_SECRET is set in Netlify's
+// environment variables, requests must include a matching x-app-secret header.
+// Honest caveat: since the client (index.html) has to embed this same value to
+// send it, anyone who reads the app's JS source can find it too — this stops
+// casual/automated scanning of the bare function URL, not a determined
+// attacker who inspects the bundle. If APP_SHARED_SECRET isn't set, this
+// check is skipped entirely (keeps existing deploys working without it).
+function checkSharedSecret(event) {
+  const required = (process.env.APP_SHARED_SECRET || '').trim();
+  if (!required) return true; // not configured — no enforcement
+  const provided = (event.headers && (event.headers['x-app-secret'] || event.headers['X-App-Secret'])) || '';
+  return provided === required;
+}
+
 function parseServiceAccount() {
   let raw = process.env.FIREBASE_SERVICE_ACCOUNT || '';
   raw = raw.trim();
@@ -71,4 +85,4 @@ async function deliverToUser(userData, payload) {
   return delivered;
 }
 
-module.exports = { admin, db, sendPush, sendFcm, deliverToUser };
+module.exports = { admin, db, sendPush, sendFcm, deliverToUser, checkSharedSecret };
