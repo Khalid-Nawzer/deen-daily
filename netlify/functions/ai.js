@@ -14,11 +14,24 @@
 // app grows a lot this shared quota can be exhausted on a busy day. If
 // that happens, upgrade to a paid Gemini key (still cheap) and nothing
 // else needs to change.
+//
+// Optional abuse guard: if APP_SHARED_SECRET is set in Netlify's env vars,
+// requests must send a matching x-app-secret header. Honest caveat: the
+// client has to embed this same value to send it, so anyone reading the
+// app's JS source can find it too — this only stops casual/automated
+// scanning of the bare URL, not a determined attacker. Skipped entirely if
+// APP_SHARED_SECRET isn't set.
+function checkSharedSecret(event) {
+  const required = (process.env.APP_SHARED_SECRET || '').trim();
+  if (!required) return true;
+  const provided = (event.headers && (event.headers['x-app-secret'] || event.headers['X-App-Secret'])) || '';
+  return provided === required;
+}
 
 exports.handler = async (event) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Headers': 'Content-Type, x-app-secret',
     'Access-Control-Allow-Methods': 'POST, OPTIONS',
     'Content-Type': 'application/json'
   };
@@ -28,6 +41,9 @@ exports.handler = async (event) => {
   }
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+  if (!checkSharedSecret(event)) {
+    return { statusCode: 401, headers, body: JSON.stringify({ error: 'Unauthorized' }) };
   }
 
   const key = (process.env.GEMINI_API_KEY || '').trim();
