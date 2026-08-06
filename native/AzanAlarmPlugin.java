@@ -5,6 +5,7 @@ import android.app.PendingIntent;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Build;
 import android.os.PowerManager;
@@ -15,6 +16,7 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -25,12 +27,26 @@ import org.json.JSONObject;
 @CapacitorPlugin(name = "AzanAlarm")
 public class AzanAlarmPlugin extends Plugin {
 
+    static final String PREFS_NAME = "azan_alarm_store";
+    static final String PREFS_KEY = "scheduled_items";
+
+    // Persists the full batch so AzanBootReceiver can re-arm everything after
+    // a reboot wipes AlarmManager's in-memory alarms — without this, alarms
+    // would silently stop firing until the app is next opened.
+    static void persistItems(Context context, JSArray items) {
+        try {
+            SharedPreferences prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putString(PREFS_KEY, items.toString()).apply();
+        } catch (Exception ignored) { }
+    }
+
     @PluginMethod
     public void scheduleBatch(PluginCall call) {
         JSArray items = call.getArray("items");
         if (items == null) { call.resolve(); return; }
         AlarmManager am = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
         try {
+            persistItems(getContext(), items);
             for (int i = 0; i < items.length(); i++) {
                 JSONObject item = items.getJSONObject(i);
                 int id = item.getInt("id");
@@ -72,6 +88,21 @@ public class AzanAlarmPlugin extends Plugin {
                 );
                 am.cancel(pi);
             }
+            // Also drop cancelled ids from the persisted batch so a later
+            // reboot doesn't resurrect alarms the app already cancelled.
+            SharedPreferences prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            String stored = prefs.getString(PREFS_KEY, "[]");
+            JSONArray storedItems = new JSONArray(stored);
+            JSONArray kept = new JSONArray();
+            for (int i = 0; i < storedItems.length(); i++) {
+                JSONObject item = storedItems.getJSONObject(i);
+                boolean cancelled = false;
+                for (int j = 0; j < ids.length(); j++) {
+                    if (item.getInt("id") == ids.getInt(j)) { cancelled = true; break; }
+                }
+                if (!cancelled) kept.put(item);
+            }
+            prefs.edit().putString(PREFS_KEY, kept.toString()).apply();
         } catch (JSONException ignored) { }
         call.resolve();
     }
@@ -83,6 +114,35 @@ public class AzanAlarmPlugin extends Plugin {
         JSObject ret = new JSObject();
         ret.put("value", ignoring);
         call.resolve(ret);
+    }
+
+    // Whether the user has granted "Alarms & reminders" (Android 12+ required
+    // for precise scheduling). If this is off, alarms silently fall back to
+    // inexact timing, which the OS can delay by several minutes.
+    @PluginMethod
+    public void canScheduleExactAlarms(PluginCall call) {
+        AlarmManager am = (AlarmManager) getContext().getSystemService(Context.ALARM_SERVICE);
+        boolean can = Build.VERSION.SDK_INT < Build.VERSION_CODES.S || (am != null && am.canScheduleExactAlarms());
+        JSObject ret = new JSObject();
+        ret.put("value", can);
+        call.resolve(ret);
+    }
+
+    // Opens Android's own "Alarms & reminders" settings screen for this app
+    // (Android 12+ only — no-op intent is safely ignored on older versions).
+    @PluginMethod
+    public void openExactAlarmSettings(PluginCall call) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                Intent intent = new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM);
+                intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                getContext().startActivity(intent);
+            }
+            call.resolve();
+        } catch (Exception e) {
+            call.reject("could not open exact alarm settings", e);
+        }
     }
 
     // Shows the system's own "allow this app to run in background / ignore
